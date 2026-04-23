@@ -4,6 +4,7 @@ import { getSpec, proposeSpecEdit } from '../../lib/api.js';
 import { useDebouncedCallback, useSse } from '../../lib/sse.js';
 import { ReadinessPanel } from './ReadinessPanel.js';
 import { AcceptanceChips } from './AcceptanceChips.js';
+import { SpawnTaskDialog } from '../tasks/SpawnTaskDialog.js';
 
 interface Props {
   specId: string;
@@ -13,6 +14,7 @@ export function SpecEditor({ specId }: Props) {
   const [spec, setSpec] = useState<Spec | null>(null);
   const [intentDraft, setIntentDraft] = useState<string>('');
   const [err, setErr] = useState<string | null>(null);
+  const [spawnOpen, setSpawnOpen] = useState(false);
 
   const liveReadiness = useSse<ReadinessBreakdown>(
     spec ? `/v1/specs/${specId}/readiness` : null,
@@ -60,7 +62,7 @@ export function SpecEditor({ specId }: Props) {
       }}
     >
       <div style={{ overflowY: 'auto', paddingRight: 'var(--s-4)' }}>
-        <Header spec={spec} />
+        <Header spec={spec} onSpawn={() => setSpawnOpen(true)} gated={readiness.gated} />
         <Section title="Intent">
           <textarea
             data-testid="intent-textarea"
@@ -126,22 +128,66 @@ export function SpecEditor({ specId }: Props) {
         </Section>
       </div>
       <ReadinessPanel breakdown={readiness} />
+      {spawnOpen && (
+        <SpawnTaskDialog
+          specId={specId}
+          defaultAssignee={spec.owner}
+          gated={readiness.gated}
+          onClose={() => setSpawnOpen(false)}
+          onCreated={() => {
+            setSpawnOpen(false);
+            // Refresh the spec so task_ids reflect the new row.
+            getSpec(specId)
+              .then(setSpec)
+              .catch((e: Error) => setErr(e.message));
+          }}
+        />
+      )}
     </div>
   );
 }
 
-function Header({ spec }: { spec: Spec }) {
+function Header({ spec, onSpawn, gated }: { spec: Spec; onSpawn: () => void; gated: boolean }) {
   return (
-    <div style={{ marginBottom: 'var(--s-6)' }}>
-      <div
-        className="mono"
-        style={{ fontSize: 'var(--fs-11)', color: 'var(--fg-3)', letterSpacing: 0.5 }}
-      >
-        {spec.id} · v{spec.version} · {spec.status}
+    <div
+      style={{
+        marginBottom: 'var(--s-6)',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'flex-end',
+        gap: 'var(--s-4)',
+      }}
+    >
+      <div>
+        <div
+          className="mono"
+          style={{ fontSize: 'var(--fs-11)', color: 'var(--fg-3)', letterSpacing: 0.5 }}
+        >
+          {spec.id} · v{spec.version} · {spec.status}
+        </div>
+        <h1 style={{ margin: '4px 0 0 0', fontSize: 'var(--fs-24)', fontWeight: 600 }}>
+          {spec.title}
+        </h1>
       </div>
-      <h1 style={{ margin: '4px 0 0 0', fontSize: 'var(--fs-24)', fontWeight: 600 }}>
-        {spec.title}
-      </h1>
+      <button
+        data-testid="spawn-task-button"
+        onClick={onSpawn}
+        disabled={gated}
+        title={gated ? 'Bring readiness ≥ 70 to spawn tasks' : 'Spawn a new task under this spec'}
+        style={{
+          padding: '6px 14px',
+          background: gated ? 'var(--bg-2)' : 'var(--accent-human)',
+          color: gated ? 'var(--fg-3)' : 'var(--bg-0)',
+          border: gated ? '1px solid var(--line-2)' : 'none',
+          borderRadius: 'var(--r-2)',
+          fontSize: 'var(--fs-12)',
+          fontWeight: 600,
+          cursor: gated ? 'not-allowed' : 'pointer',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        + Spawn task
+      </button>
     </div>
   );
 }

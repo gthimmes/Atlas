@@ -88,3 +88,36 @@ export async function proposeSpecEdit(
 export async function getReadiness(id: string): Promise<ReadinessBreakdown> {
   return request<ReadinessBreakdown>(`/v1/specs/${id}/readiness`);
 }
+
+export async function getTask(id: string): Promise<Task> {
+  return request<Task>(`/v1/tasks/${id}`);
+}
+
+export async function createTask(body: {
+  spec: string;
+  title: string;
+  assignee: string;
+  description?: string;
+  risk?: 'green' | 'amber' | 'red';
+  paths?: string[];
+}): Promise<{ id: string }> {
+  return request<{ id: string }>('/v1/tools/task.create', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+}
+
+export async function updateTask(body: {
+  task: string;
+  status?: string;
+  title?: string;
+  description?: string;
+  assignee?: string;
+  risk?: 'green' | 'amber' | 'red';
+  paths?: string[];
+}): Promise<{ id: string }> {
+  return request<{ id: string }>('/v1/tools/task.update', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+}

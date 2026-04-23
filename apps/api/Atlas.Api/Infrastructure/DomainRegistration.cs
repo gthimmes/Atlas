@@ -20,6 +20,8 @@ public static class DomainRegistration
         services.AddSingleton<SpecProjection>(sp => new SpecProjection(
             sp.GetRequiredService<IOptions<JsonOptions>>().Value.SerializerOptions,
             sp.GetRequiredService<IReadinessCalculator>()));
+        services.AddSingleton<TaskProjection>(sp => new TaskProjection(
+            sp.GetRequiredService<IOptions<JsonOptions>>().Value.SerializerOptions));
 
         // SSE fan-out hub (readiness updates + later: activity streams).
         services.AddSingleton<ISpecReadinessHub, SpecReadinessHub>();

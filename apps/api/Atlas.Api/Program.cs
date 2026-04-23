@@ -25,6 +25,7 @@ app.UseCors("web");
 app.MapHealthEndpoints();
 app.MapSpecEndpoints();
 app.MapTaskEndpoints();
+app.MapTaskToolEndpoints();
 
 // Seed subcommand -- run with `dotnet run -- seed`. Kept sync so the
 // top-level Main stays non-async (WebApplicationFactory's HostFactoryResolver

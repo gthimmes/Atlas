@@ -1,19 +1,47 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { Spec, Task } from '@atlas/schema';
+import {
+  Background,
+  Controls,
+  MarkerType,
+  ReactFlow,
+  type Edge,
+  type Node,
+  type NodeTypes,
+} from '@xyflow/react';
+import '@xyflow/react/dist/style.css';
+
 import { listSpecs, listTasks } from '../../lib/api.js';
+import { SpecNode } from './SpecNode.js';
+import { TaskNode } from './TaskNode.js';
+import { TimeScrubber } from './TimeScrubber.js';
 
 interface Props {
   onOpenSpec: (id: string) => void;
+  onOpenTask?: (id: string) => void;
 }
 
-// Phase 1: read-only force-lite graph. Specs as large nodes on the left,
-// their tasks in a stack to the right, edges drawn as simple lines. Phase 2
-// upgrades to react-flow with drag + time-scrub.
+const nodeTypes: NodeTypes = {
+  spec: SpecNode,
+  task: TaskNode,
+};
 
-export function WorkGraph({ onOpenSpec }: Props) {
+// Layout: spec nodes in a column on the left, their tasks fanned out to
+// the right in rows. Phase 2 is static layout; drag adjusts positions in
+// local react-flow state only (not persisted).
+const LAYOUT = {
+  specX: 40,
+  specGapY: 220,
+  taskStartX: 360,
+  taskGapX: 220,
+  taskGapY: 90,
+};
+
+export function WorkGraph({ onOpenSpec, onOpenTask }: Props) {
   const [specs, setSpecs] = useState<Spec[] | null>(null);
   const [tasks, setTasks] = useState<Task[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const [cutoff, setCutoff] = useState<Date | null>(null); // null = "now", no filter
 
   useEffect(() => {
     let cancelled = false;
@@ -29,6 +57,80 @@ export function WorkGraph({ onOpenSpec }: Props) {
     };
   }, []);
 
+  const { nodes, edges } = useMemo(() => {
+    if (!specs || !tasks) return { nodes: [] as Node[], edges: [] as Edge[] };
+
+    const cutoffMs = cutoff?.getTime();
+    const visibleTasks = cutoffMs
+      ? tasks.filter((t) => new Date(t.created_at).getTime() <= cutoffMs)
+      : tasks;
+    const visibleTaskIds = new Set(visibleTasks.map((t) => t.id));
+
+    const tasksBySpec = new Map<string, Task[]>();
+    for (const t of visibleTasks) {
+      const list = tasksBySpec.get(t.parent_spec) ?? [];
+      list.push(t);
+      tasksBySpec.set(t.parent_spec, list);
+    }
+
+    const nodes: Node[] = [];
+    const edges: Edge[] = [];
+
+    specs.forEach((spec, specIdx) => {
+      const y = specIdx * LAYOUT.specGapY;
+      nodes.push({
+        id: spec.id,
+        type: 'spec',
+        position: { x: LAYOUT.specX, y },
+        data: { spec, onOpen: () => onOpenSpec(spec.id) },
+        draggable: true,
+      });
+
+      const taskList = tasksBySpec.get(spec.id) ?? [];
+      taskList.forEach((t, taskIdx) => {
+        const col = taskIdx % 3;
+        const row = Math.floor(taskIdx / 3);
+        nodes.push({
+          id: t.id,
+          type: 'task',
+          position: {
+            x: LAYOUT.taskStartX + col * LAYOUT.taskGapX,
+            y: y + row * LAYOUT.taskGapY,
+          },
+          data: { task: t, onOpen: () => onOpenTask?.(t.id) },
+          draggable: true,
+        });
+
+        // Edge from spec -> task.
+        edges.push({
+          id: `${spec.id}-${t.id}`,
+          source: spec.id,
+          target: t.id,
+          style: { stroke: 'var(--line-2)', strokeWidth: 1 },
+          markerEnd: { type: MarkerType.ArrowClosed, color: 'var(--line-2)' },
+        });
+      });
+    });
+
+    // blocks / blocked_by edges between tasks.
+    for (const t of visibleTasks) {
+      for (const blockedBy of t.blocked_by) {
+        if (!visibleTaskIds.has(blockedBy)) continue;
+        edges.push({
+          id: `block-${blockedBy}-${t.id}`,
+          source: blockedBy,
+          target: t.id,
+          style: { stroke: 'var(--signal-amber)', strokeDasharray: '4 4' },
+          markerEnd: { type: MarkerType.ArrowClosed, color: 'var(--signal-amber)' },
+          label: 'blocks',
+          labelStyle: { fill: 'var(--fg-3)', fontSize: 10, fontFamily: 'var(--font-mono)' },
+        });
+      }
+    }
+
+    return { nodes, edges };
+  }, [specs, tasks, cutoff, onOpenSpec, onOpenTask]);
+
   if (err) {
     return (
       <div data-testid="graph-error" style={{ color: 'var(--signal-red)', padding: 'var(--s-6)' }}>
@@ -39,7 +141,6 @@ export function WorkGraph({ onOpenSpec }: Props) {
   if (!specs || !tasks) {
     return <div style={{ color: 'var(--fg-2)', padding: 'var(--s-6)' }}>Loading graph…</div>;
   }
-
   if (specs.length === 0) {
     return (
       <div data-testid="graph-empty" style={{ color: 'var(--fg-3)', padding: 'var(--s-6)' }}>
@@ -48,145 +149,33 @@ export function WorkGraph({ onOpenSpec }: Props) {
     );
   }
 
-  const tasksBySpec = new Map<string, Task[]>();
-  for (const t of tasks) {
-    const list = tasksBySpec.get(t.parent_spec) ?? [];
-    list.push(t);
-    tasksBySpec.set(t.parent_spec, list);
-  }
-
   return (
     <div
       data-testid="work-graph"
       style={{
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 'var(--s-6)',
         height: '100%',
-        overflowY: 'auto',
-      }}
-    >
-      {specs.map((spec) => (
-        <SpecRow
-          key={spec.id}
-          spec={spec}
-          tasks={tasksBySpec.get(spec.id) ?? []}
-          onOpenSpec={onOpenSpec}
-        />
-      ))}
-    </div>
-  );
-}
-
-function SpecRow({
-  spec,
-  tasks,
-  onOpenSpec,
-}: {
-  spec: Spec;
-  tasks: readonly Task[];
-  onOpenSpec: (id: string) => void;
-}) {
-  return (
-    <div style={{ display: 'flex', gap: 'var(--s-4)', alignItems: 'stretch' }}>
-      <button
-        data-testid={`graph-spec-${spec.id}`}
-        onClick={() => onOpenSpec(spec.id)}
-        style={specNodeStyle(spec.readiness_breakdown.gated)}
-      >
-        <div className="mono" style={{ fontSize: 10, color: 'var(--fg-3)' }}>
-          {spec.id} · {spec.status}
-        </div>
-        <div style={{ fontSize: 'var(--fs-14)', fontWeight: 600, marginTop: 4 }}>{spec.title}</div>
-        <div style={{ display: 'flex', gap: 'var(--s-2)', marginTop: 6, alignItems: 'center' }}>
-          <span
-            className="mono"
-            style={{
-              padding: '1px 7px',
-              borderRadius: 'var(--r-pill)',
-              background: spec.readiness_breakdown.gated
-                ? 'var(--signal-amber)'
-                : 'var(--signal-green)',
-              color: 'var(--bg-0)',
-              fontSize: 10,
-            }}
-          >
-            {spec.readiness_score}/100
-          </span>
-          <span className="mono" style={{ color: 'var(--fg-3)', fontSize: 10 }}>
-            {tasks.length} task{tasks.length === 1 ? '' : 's'}
-          </span>
-        </div>
-      </button>
-
-      <div
-        style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: 'var(--s-2)',
-          flex: 1,
-          alignContent: 'flex-start',
-        }}
-      >
-        {tasks.map((t) => (
-          <TaskChip key={t.id} task={t} />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function TaskChip({ task }: { task: Task }) {
-  const riskBg: Record<string, string> = {
-    green: 'var(--signal-green)',
-    amber: 'var(--signal-amber)',
-    red: 'var(--signal-red)',
-  };
-  return (
-    <div
-      data-testid={`graph-task-${task.id}`}
-      style={{
         display: 'flex',
         flexDirection: 'column',
-        gap: 4,
-        padding: 'var(--s-2) var(--s-3)',
-        background: 'var(--bg-1)',
-        border: '1px solid var(--line-1)',
-        borderRadius: 'var(--r-2)',
-        minWidth: 180,
+        background: 'var(--bg-inset)',
+        borderRadius: 'var(--r-3)',
+        overflow: 'hidden',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--s-2)' }}>
-        <span
-          style={{
-            width: 7,
-            height: 7,
-            borderRadius: '50%',
-            background: riskBg[task.risk],
-            flexShrink: 0,
-          }}
-        />
-        <span className="mono" style={{ fontSize: 10, color: 'var(--fg-3)' }}>
-          {task.id}
-        </span>
+      <div style={{ flex: 1, minHeight: 0 }}>
+        <ReactFlow
+          nodes={nodes}
+          edges={edges}
+          nodeTypes={nodeTypes}
+          fitView
+          fitViewOptions={{ padding: 0.2 }}
+          proOptions={{ hideAttribution: true }}
+          defaultEdgeOptions={{ type: 'smoothstep' }}
+        >
+          <Background gap={24} color="var(--line-1)" />
+          <Controls showInteractive={false} />
+        </ReactFlow>
       </div>
-      <div style={{ fontSize: 'var(--fs-12)', color: 'var(--fg-1)' }}>{task.title}</div>
-      <div className="mono" style={{ fontSize: 10, color: 'var(--fg-3)' }}>
-        {task.status}
-      </div>
+      <TimeScrubber tasks={tasks} value={cutoff} onChange={setCutoff} />
     </div>
   );
-}
-
-function specNodeStyle(gated: boolean): React.CSSProperties {
-  return {
-    textAlign: 'left',
-    minWidth: 220,
-    padding: 'var(--s-3) var(--s-4)',
-    background: 'var(--bg-1)',
-    border: `1px solid ${gated ? 'var(--signal-amber)' : 'var(--line-2)'}`,
-    borderRadius: 'var(--r-3)',
-    color: 'var(--fg-0)',
-    cursor: 'pointer',
-  };
 }

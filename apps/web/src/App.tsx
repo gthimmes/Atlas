@@ -3,6 +3,7 @@ import { Nav } from './components/Nav.js';
 import { HealthBadge } from './components/HealthBadge.js';
 import { SpecEditor } from './features/specs/SpecEditor.js';
 import { WorkGraph } from './features/graph/WorkGraph.js';
+import { TaskDetailPanel } from './features/tasks/TaskDetailPanel.js';
 
 type Theme = 'dark' | 'light';
 type View = 'graph' | 'spec' | 'run' | 'digest';
@@ -21,6 +22,7 @@ export function App() {
   const [activeSpecId, setActiveSpecId] = useState<string>(
     () => localStorage.getItem('atlas.activeSpec') ?? DEFAULT_SPEC_ID,
   );
+  const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
 
   useEffect(() => {
     localStorage.setItem('atlas.theme', theme);
@@ -53,15 +55,30 @@ export function App() {
         onToggleTheme={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
       />
       <main
-        style={{ flex: 1, minHeight: 0, padding: 'var(--s-6)', overflow: 'hidden' }}
+        style={{
+          flex: 1,
+          minHeight: 0,
+          padding: 'var(--s-6)',
+          overflow: 'hidden',
+          position: 'relative',
+        }}
         data-testid={`surface-${view}`}
       >
         {view === 'spec' ? (
           <SpecEditor specId={activeSpecId} />
         ) : view === 'graph' ? (
-          <WorkGraph onOpenSpec={openSpec} />
+          <WorkGraph onOpenSpec={openSpec} onOpenTask={setActiveTaskId} />
         ) : (
           <ComingSoon view={view} />
+        )}
+        {view === 'graph' && activeTaskId && (
+          <TaskDetailPanel
+            taskId={activeTaskId}
+            onClose={() => setActiveTaskId(null)}
+            onUpdate={() => {
+              /* Phase 2: graph auto-refreshes on next mount. */
+            }}
+          />
         )}
       </main>
       <footer
