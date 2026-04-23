@@ -22,17 +22,16 @@ test.describe('Phase 0 shell', () => {
     await expect(shell).not.toHaveClass(initialClass ?? '');
   });
 
-  test('Work Graph, Spec, Run, and Digest are all reachable and render placeholders', async ({
-    page,
-  }) => {
+  test('Work Graph, Spec, Run, and Digest are all reachable via nav', async ({ page }) => {
     await page.goto('/');
+    const nav = page.getByRole('navigation');
     for (const [label, testid] of [
       ['Work graph', 'surface-graph'],
       ['Spec', 'surface-spec'],
       ['Agent run', 'surface-run'],
       ['Digest', 'surface-digest'],
     ] as const) {
-      await page.getByRole('button', { name: new RegExp(`^${label}`, 'i') }).click();
+      await nav.getByRole('button', { name: new RegExp(`^${label}`, 'i') }).click();
       await expect(page.getByTestId(testid)).toBeVisible();
     }
   });

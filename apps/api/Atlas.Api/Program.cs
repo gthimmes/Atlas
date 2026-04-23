@@ -1,5 +1,6 @@
 using Atlas.Api.Endpoints;
 using Atlas.Api.Infrastructure;
+using FluentValidation;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -10,6 +11,8 @@ builder.Host.UseSerilog((ctx, cfg) => cfg
 
 builder.Services.AddAtlasDatabase(builder.Configuration);
 builder.Services.AddAtlasJson();
+builder.Services.AddAtlasDomain();
+builder.Services.AddValidatorsFromAssemblyContaining<ProposeSpecEditValidator>();
 builder.Services.AddCors(o => o.AddPolicy("web", p => p
     .WithOrigins("http://localhost:5173")
     .AllowAnyMethod()
@@ -20,6 +23,8 @@ var app = builder.Build();
 app.UseSerilogRequestLogging();
 app.UseCors("web");
 app.MapHealthEndpoints();
+app.MapSpecEndpoints();
+app.MapTaskEndpoints();
 
 // Seed subcommand -- run with `dotnet run -- seed`. Kept sync so the
 // top-level Main stays non-async (WebApplicationFactory's HostFactoryResolver

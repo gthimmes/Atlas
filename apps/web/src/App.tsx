@@ -1,9 +1,15 @@
 import { useEffect, useState } from 'react';
 import { Nav } from './components/Nav.js';
 import { HealthBadge } from './components/HealthBadge.js';
+import { SpecEditor } from './features/specs/SpecEditor.js';
+import { WorkGraph } from './features/graph/WorkGraph.js';
 
 type Theme = 'dark' | 'light';
 type View = 'graph' | 'spec' | 'run' | 'digest';
+
+// Phase 1: single seeded workspace. The Work Graph picks a spec for the
+// editor to land on; Phase 2 adds routing + multi-spec navigation.
+const DEFAULT_SPEC_ID = 'spec_s142';
 
 export function App() {
   const [theme, setTheme] = useState<Theme>(() => {
@@ -12,6 +18,9 @@ export function App() {
   const [view, setView] = useState<View>(() => {
     return (localStorage.getItem('atlas.view') as View | null) ?? 'graph';
   });
+  const [activeSpecId, setActiveSpecId] = useState<string>(
+    () => localStorage.getItem('atlas.activeSpec') ?? DEFAULT_SPEC_ID,
+  );
 
   useEffect(() => {
     localStorage.setItem('atlas.theme', theme);
@@ -21,6 +30,15 @@ export function App() {
   useEffect(() => {
     localStorage.setItem('atlas.view', view);
   }, [view]);
+
+  useEffect(() => {
+    localStorage.setItem('atlas.activeSpec', activeSpecId);
+  }, [activeSpecId]);
+
+  const openSpec = (id: string) => {
+    setActiveSpecId(id);
+    setView('spec');
+  };
 
   return (
     <div
@@ -35,10 +53,16 @@ export function App() {
         onToggleTheme={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
       />
       <main
-        style={{ flex: 1, minHeight: 0, padding: 'var(--s-6)' }}
+        style={{ flex: 1, minHeight: 0, padding: 'var(--s-6)', overflow: 'hidden' }}
         data-testid={`surface-${view}`}
       >
-        <ComingSoon view={view} />
+        {view === 'spec' ? (
+          <SpecEditor specId={activeSpecId} />
+        ) : view === 'graph' ? (
+          <WorkGraph onOpenSpec={openSpec} />
+        ) : (
+          <ComingSoon view={view} />
+        )}
       </main>
       <footer
         style={{

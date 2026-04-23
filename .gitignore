@@ -1,3 +1,9 @@
+# Stray tsc output at repo root (schema.ts is authoritative, never emit alongside it)
+/schema.js
+/schema.js.map
+/schema.d.ts
+/schema.d.ts.map
+
 # Node / pnpm
 node_modules/
 .pnpm-store/

@@ -27,8 +27,18 @@ export default defineConfig({
   ],
   webServer: [
     {
-      // The web app auto-proxies /v1 to the API. If the API isn't up, the
-      // HealthBadge shows red dots -- tests that need DB wait on /v1/health/db.
+      command: 'dotnet run --project apps/api/Atlas.Api --launch-profile http',
+      cwd: '../..',
+      port: API_PORT,
+      reuseExistingServer: !process.env.CI,
+      timeout: 120_000,
+      env: {
+        // Integration tests assume the developer-db is up (docker compose up -d db
+        // or `make db-up`). The seeder ran at least once so S-142 exists.
+        ASPNETCORE_ENVIRONMENT: 'Development',
+      },
+    },
+    {
       command: 'pnpm --filter @atlas/web run dev',
       cwd: '../..',
       port: PORT,
