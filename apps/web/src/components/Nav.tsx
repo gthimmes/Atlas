@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useHelp } from '../help/store.js';
 
 type View = 'graph' | 'spec' | 'run' | 'digest';
 
@@ -17,17 +18,24 @@ const ITEMS: Array<{ id: View; label: string; kbd: string }> = [
 ];
 
 export function Nav({ view, onChange, theme, onToggleTheme }: Props) {
+  const toggleHelp = useHelp((s) => s.toggle);
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
       if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) return;
+      if (e.key === '?' || (e.key === '/' && e.shiftKey)) {
+        e.preventDefault();
+        toggleHelp();
+        return;
+      }
       const m: Record<string, View> = { g: 'graph', s: 'spec', r: 'run', d: 'digest' };
       const next = m[e.key.toLowerCase()];
       if (next) onChange(next);
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [onChange]);
+  }, [onChange, toggleHelp]);
 
   return (
     <nav
@@ -100,6 +108,29 @@ export function Nav({ view, onChange, theme, onToggleTheme }: Props) {
 
       <div style={{ flex: 1 }} />
 
+      <button
+        data-testid="help-button"
+        onClick={() => toggleHelp()}
+        aria-label="open help"
+        title="Help (press ?)"
+        style={{
+          padding: '5px 10px',
+          background: 'var(--bg-2)',
+          color: 'var(--fg-1)',
+          border: '1px solid var(--line-1)',
+          borderRadius: 'var(--r-2)',
+          fontSize: 'var(--fs-12)',
+          fontWeight: 600,
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 4,
+        }}
+      >
+        ?
+        <span className="mono" style={{ fontSize: 10, color: 'var(--fg-3)' }}>
+          Help
+        </span>
+      </button>
       <button
         onClick={onToggleTheme}
         aria-label={`toggle to ${theme === 'dark' ? 'light' : 'dark'} theme`}

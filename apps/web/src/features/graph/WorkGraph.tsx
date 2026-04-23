@@ -12,6 +12,7 @@ import {
 import '@xyflow/react/dist/style.css';
 
 import { listSpecs, listTasks } from '../../lib/api.js';
+import { useHelp } from '../../help/store.js';
 import { SpecNode } from './SpecNode.js';
 import { TaskNode } from './TaskNode.js';
 import { TimeScrubber } from './TimeScrubber.js';
@@ -42,6 +43,7 @@ export function WorkGraph({ onOpenSpec, onOpenTask }: Props) {
   const [tasks, setTasks] = useState<Task[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [cutoff, setCutoff] = useState<Date | null>(null); // null = "now", no filter
+  const openHelp = useHelp((s) => s.open);
 
   useEffect(() => {
     let cancelled = false;
@@ -139,12 +141,67 @@ export function WorkGraph({ onOpenSpec, onOpenTask }: Props) {
     );
   }
   if (!specs || !tasks) {
-    return <div style={{ color: 'var(--fg-2)', padding: 'var(--s-6)' }}>Loading graph…</div>;
+    return (
+      <div
+        data-testid="graph-loading"
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          height: '100%',
+          gap: 'var(--s-2)',
+          color: 'var(--fg-2)',
+        }}
+      >
+        <span>Loading the work graph…</span>
+        <span className="mono" style={{ fontSize: 10, color: 'var(--fg-3)' }}>
+          specs + tasks from /v1/specs + /v1/tasks
+        </span>
+      </div>
+    );
   }
   if (specs.length === 0) {
     return (
-      <div data-testid="graph-empty" style={{ color: 'var(--fg-3)', padding: 'var(--s-6)' }}>
-        No specs in this workspace yet.
+      <div
+        data-testid="graph-empty"
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          height: '100%',
+          gap: 'var(--s-3)',
+          color: 'var(--fg-1)',
+          maxWidth: 520,
+          margin: '0 auto',
+          textAlign: 'center',
+        }}
+      >
+        <div style={{ fontSize: 'var(--fs-24)', color: 'var(--fg-0)', fontWeight: 600 }}>
+          Atlas is empty.
+        </div>
+        <p style={{ color: 'var(--fg-2)', lineHeight: 'var(--lh-prose)', margin: 0 }}>
+          The work graph renders every spec in the workspace with its tasks branching off, plus the
+          dependency edges between them. There are no specs yet. Load the Meridian demo workspace
+          with <code style={inlineCode}>make seed</code> or create your first spec from the API.
+        </p>
+        <button
+          onClick={() => openHelp('your-first-spec')}
+          style={{
+            marginTop: 'var(--s-3)',
+            padding: '6px 14px',
+            background: 'var(--accent-human)',
+            color: 'var(--bg-0)',
+            border: 'none',
+            borderRadius: 'var(--r-2)',
+            cursor: 'pointer',
+            fontSize: 'var(--fs-12)',
+            fontWeight: 600,
+          }}
+        >
+          Walk me through my first spec
+        </button>
       </div>
     );
   }
@@ -159,8 +216,45 @@ export function WorkGraph({ onOpenSpec, onOpenTask }: Props) {
         background: 'var(--bg-inset)',
         borderRadius: 'var(--r-3)',
         overflow: 'hidden',
+        position: 'relative',
       }}
     >
+      <div
+        data-testid="work-graph-orient"
+        style={{
+          position: 'absolute',
+          top: 'var(--s-3)',
+          left: 'var(--s-4)',
+          zIndex: 5,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 'var(--s-2)',
+          fontSize: 'var(--fs-11)',
+          color: 'var(--fg-3)',
+          background: 'var(--bg-1)',
+          border: '1px solid var(--line-1)',
+          borderRadius: 'var(--r-pill)',
+          padding: '4px 10px',
+        }}
+      >
+        <span className="mono" style={{ fontSize: 10 }}>
+          {specs.length} spec · {tasks.length} tasks
+        </span>
+        <span style={{ color: 'var(--line-2)' }}>·</span>
+        <button
+          onClick={() => openHelp('reading-work-graph')}
+          style={{
+            background: 'transparent',
+            border: 'none',
+            color: 'var(--accent-human)',
+            cursor: 'pointer',
+            fontSize: 'var(--fs-11)',
+            padding: 0,
+          }}
+        >
+          What am I looking at?
+        </button>
+      </div>
       <div style={{ flex: 1, minHeight: 0 }}>
         <ReactFlow
           nodes={nodes}
@@ -179,3 +273,12 @@ export function WorkGraph({ onOpenSpec, onOpenTask }: Props) {
     </div>
   );
 }
+
+const inlineCode: React.CSSProperties = {
+  fontFamily: 'var(--font-mono)',
+  fontSize: '0.92em',
+  padding: '1px 5px',
+  background: 'var(--bg-2)',
+  border: '1px solid var(--line-1)',
+  borderRadius: 'var(--r-1)',
+};

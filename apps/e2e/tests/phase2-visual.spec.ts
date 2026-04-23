@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './_fixtures.js';
 
 test.describe('Phase 2 visual validation', () => {
   test('work graph with react-flow + time scrubber -- dark', async ({ page }) => {

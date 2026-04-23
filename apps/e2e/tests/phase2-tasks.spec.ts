@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './_fixtures.js';
 
 // Phase 2 playback: tasks + interactive work graph.
 

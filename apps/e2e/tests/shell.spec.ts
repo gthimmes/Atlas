@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './_fixtures.js';
 
 test.describe('Phase 0 shell', () => {
   test('renders nav + default Work Graph surface', async ({ page }) => {

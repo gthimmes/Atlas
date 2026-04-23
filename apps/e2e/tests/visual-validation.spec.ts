@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './_fixtures.js';
 
 // One-off: captures dark + light screenshots of the Phase 0 shell for
 // manual visual validation. Safe to leave in the suite -- screenshots are

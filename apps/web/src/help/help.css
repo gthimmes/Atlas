@@ -1,0 +1,125 @@
+/* Styles for rendered markdown inside the Help Drawer. */
+
+.help-article h1 {
+  font-size: var(--fs-24);
+  font-weight: 600;
+  color: var(--fg-0);
+  margin: 0 0 var(--s-4);
+  line-height: var(--lh-tight);
+}
+
+.help-article h2 {
+  font-size: var(--fs-16);
+  font-weight: 600;
+  color: var(--fg-0);
+  margin: var(--s-6) 0 var(--s-3);
+}
+
+.help-article h3 {
+  font-size: var(--fs-14);
+  font-weight: 600;
+  color: var(--fg-0);
+  margin: var(--s-5) 0 var(--s-2);
+}
+
+.help-article p {
+  margin: 0 0 var(--s-3);
+  color: var(--fg-1);
+}
+
+.help-article ul,
+.help-article ol {
+  margin: 0 0 var(--s-4);
+  padding-left: var(--s-5);
+  color: var(--fg-1);
+}
+
+.help-article li {
+  margin-bottom: var(--s-1);
+}
+
+.help-article li > p {
+  margin: 0;
+}
+
+.help-article strong {
+  color: var(--fg-0);
+  font-weight: 600;
+}
+
+.help-article em {
+  color: var(--fg-1);
+  font-style: italic;
+}
+
+.help-article code {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+  padding: 1px 5px;
+  background: var(--bg-2);
+  border: 1px solid var(--line-1);
+  border-radius: var(--r-1);
+  color: var(--fg-0);
+}
+
+.help-article pre {
+  margin: 0 0 var(--s-4);
+  padding: var(--s-3);
+  background: var(--bg-inset);
+  border: 1px solid var(--line-1);
+  border-radius: var(--r-2);
+  overflow-x: auto;
+}
+
+.help-article pre code {
+  padding: 0;
+  background: transparent;
+  border: none;
+  font-size: 0.88em;
+}
+
+.help-article table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0 0 var(--s-4);
+  font-size: var(--fs-12);
+}
+
+.help-article th,
+.help-article td {
+  padding: 6px var(--s-3);
+  border-bottom: 1px solid var(--line-1);
+  text-align: left;
+  vertical-align: top;
+}
+
+.help-article th {
+  color: var(--fg-3);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: var(--fs-11);
+  letter-spacing: 0.5px;
+}
+
+.help-article hr {
+  border: 0;
+  border-top: 1px solid var(--line-1);
+  margin: var(--s-6) 0;
+}
+
+.help-article a {
+  color: var(--accent-human);
+  text-decoration: none;
+  border-bottom: 1px dotted var(--accent-human);
+}
+
+.help-article a:hover {
+  border-bottom-style: solid;
+}
+
+.help-article blockquote {
+  margin: 0 0 var(--s-4);
+  padding: var(--s-2) var(--s-4);
+  border-left: 3px solid var(--line-2);
+  color: var(--fg-2);
+}

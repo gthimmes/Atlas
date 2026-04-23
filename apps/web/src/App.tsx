@@ -4,6 +4,9 @@ import { HealthBadge } from './components/HealthBadge.js';
 import { SpecEditor } from './features/specs/SpecEditor.js';
 import { WorkGraph } from './features/graph/WorkGraph.js';
 import { TaskDetailPanel } from './features/tasks/TaskDetailPanel.js';
+import { HelpDrawer } from './help/HelpDrawer.js';
+import { FirstRunModal } from './help/FirstRunModal.js';
+import { useHelp } from './help/store.js';
 
 type Theme = 'dark' | 'light';
 type View = 'graph' | 'spec' | 'run' | 'digest';
@@ -95,24 +98,73 @@ export function App() {
       >
         <span className="mono">atlas</span>
         <span>/</span>
-        <span>phase 0</span>
+        <span>phase 2</span>
         <span style={{ flex: 1 }} />
+        <FirstRunResetLink />
         <HealthBadge />
       </footer>
+      <FirstRunModal />
+      <HelpDrawer />
     </div>
   );
 }
 
+function FirstRunResetLink() {
+  return (
+    <button
+      data-testid="first-run-reset"
+      onClick={() => {
+        localStorage.removeItem('atlas.firstRunSeen');
+        location.reload();
+      }}
+      title="Show the welcome modal again (dogfood convenience)"
+      style={{
+        background: 'transparent',
+        border: 'none',
+        color: 'var(--fg-3)',
+        cursor: 'pointer',
+        fontSize: 10,
+        fontFamily: 'var(--font-mono)',
+      }}
+    >
+      reset welcome
+    </button>
+  );
+}
+
 function ComingSoon({ view }: { view: View }) {
-  const labels: Record<View, { heading: string; landsIn: string }> = {
-    graph: { heading: 'Work Graph', landsIn: 'Phase 1' },
-    spec: { heading: 'Spec Editor', landsIn: 'Phase 1' },
-    run: { heading: 'Agent Run Panel', landsIn: 'Phase 3' },
-    digest: { heading: 'Morning Digest', landsIn: 'Phase 4' },
-  };
-  const l = labels[view];
+  const openHelp = useHelp((s) => s.open);
+  const copy: Record<View, { heading: string; phase: string; body: string; helpSection: string }> =
+    {
+      graph: {
+        heading: 'Work Graph',
+        phase: 'Phase 1+',
+        body: 'This surface is live.',
+        helpSection: 'reading-work-graph',
+      },
+      spec: {
+        heading: 'Spec Editor',
+        phase: 'Phase 1+',
+        body: 'This surface is live.',
+        helpSection: 'your-first-spec',
+      },
+      run: {
+        heading: 'Agent Run Panel',
+        phase: 'Phase 3 — not built yet',
+        body: "When it lands: a live view of an agent session. Model, context budget, cost, activity stream (reads · edits · tool calls · decisions · elicitations), and sub-agents spawned. You'll be able to answer elicitations (clarifying questions) here and watch acceptance chips flip in real time.",
+        helpSection: 'concepts',
+      },
+      digest: {
+        heading: 'Morning Digest',
+        phase: 'Phase 4 — not built yet',
+        body: 'When it lands: a batched view of overnight agent work — sessions complete, PRs merged, acceptance criteria status changes, ADRs emitted. One-click approve or request-changes per item. Red-risk merges are surfaced separately.',
+        helpSection: 'concepts',
+      },
+    };
+  const l = copy[view];
   return (
     <div
+      data-testid={`coming-soon-${view}`}
       style={{
         display: 'flex',
         flexDirection: 'column',
@@ -121,14 +173,41 @@ function ComingSoon({ view }: { view: View }) {
         height: '100%',
         gap: 'var(--s-3)',
         color: 'var(--fg-2)',
+        maxWidth: 560,
+        margin: '0 auto',
+        textAlign: 'center',
       }}
     >
+      <div
+        className="mono"
+        style={{
+          fontSize: 'var(--fs-11)',
+          color: 'var(--fg-3)',
+          letterSpacing: 0.5,
+          textTransform: 'uppercase',
+        }}
+      >
+        {l.phase}
+      </div>
       <div style={{ fontSize: 'var(--fs-24)', color: 'var(--fg-0)', fontWeight: 600 }}>
         {l.heading}
       </div>
-      <div className="mono" style={{ fontSize: 'var(--fs-11)', color: 'var(--fg-3)' }}>
-        lands in {l.landsIn}
-      </div>
+      <p style={{ color: 'var(--fg-1)', lineHeight: 'var(--lh-prose)', margin: 0 }}>{l.body}</p>
+      <button
+        onClick={() => openHelp(l.helpSection)}
+        style={{
+          marginTop: 'var(--s-3)',
+          padding: '6px 14px',
+          background: 'var(--bg-2)',
+          color: 'var(--fg-1)',
+          border: '1px solid var(--line-2)',
+          borderRadius: 'var(--r-2)',
+          cursor: 'pointer',
+          fontSize: 'var(--fs-12)',
+        }}
+      >
+        Read more about this surface →
+      </button>
     </div>
   );
 }

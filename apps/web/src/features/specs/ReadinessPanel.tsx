@@ -1,4 +1,5 @@
 import type { ReadinessBreakdown } from '@atlas/schema';
+import { WhatsThis } from '../../help/WhatsThis.js';
 
 interface Props {
   breakdown: ReadinessBreakdown;
@@ -50,9 +51,16 @@ export function ReadinessPanel({ breakdown }: Props) {
             color: 'var(--fg-3)',
             textTransform: 'uppercase',
             letterSpacing: 0.5,
+            display: 'inline-flex',
+            alignItems: 'center',
           }}
         >
           Readiness
+          <WhatsThis
+            section="readiness-gate"
+            summary="0–100 score from 5 weighted components. Below 70 the spec is 'gated' and you can't spawn tasks from it."
+            label="about readiness"
+          />
         </h3>
         <span
           data-testid="gate-pill"

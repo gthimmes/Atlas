@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './_fixtures.js';
 
 // Phase 1 playback: open the seeded Meridian spec (S-142), edit a section,
 // confirm the API responds + SSE pushes a fresh readiness breakdown that

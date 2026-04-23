@@ -1,4 +1,5 @@
 import type { AcceptanceCriterion } from '@atlas/schema';
+import { WhatsThis } from '../../help/WhatsThis.js';
 
 const COLOR: Record<string, string> = {
   unverified: 'var(--fg-3)',
@@ -42,20 +43,32 @@ export function AcceptanceChips({ criteria }: { criteria: readonly AcceptanceCri
 
 function StatusChip({ status }: { status: string }) {
   return (
-    <span
-      data-status={status}
-      className="mono"
-      style={{
-        padding: '1px 8px',
-        fontSize: 10,
-        borderRadius: 'var(--r-pill)',
-        color: 'var(--bg-0)',
-        background: COLOR[status] ?? COLOR.unverified,
-        whiteSpace: 'nowrap',
-        flexShrink: 0,
-      }}
-    >
-      {status}
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 2, flexShrink: 0 }}>
+      <span
+        data-status={status}
+        className="mono"
+        style={{
+          padding: '1px 8px',
+          fontSize: 10,
+          borderRadius: 'var(--r-pill)',
+          color: 'var(--bg-0)',
+          background: COLOR[status] ?? COLOR.unverified,
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {status}
+      </span>
+      {status === 'unverified' || status === 'flaky' ? (
+        <WhatsThis
+          section="acceptance-criteria"
+          summary={
+            status === 'flaky'
+              ? 'Flaky: rolling pass/fail ≥ 20% variance. Investigate before trusting.'
+              : 'Unverified: no test run yet. The statement exists but nothing executed against it.'
+          }
+          label={`about ${status}`}
+        />
+      ) : null}
     </span>
   );
 }
