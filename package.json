@@ -13,7 +13,7 @@
     "lint": "pnpm -r lint",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "pnpm -r test",
+    "test": "pnpm -r --filter=!@atlas/e2e test",
     "codegen": "pnpm --filter @atlas/schema-codegen run emit",
     "codegen:check": "pnpm --filter @atlas/schema-codegen run check",
     "e2e": "pnpm --filter @atlas/e2e run test",
