@@ -9,14 +9,16 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+# pnpm/action-setup@v4 reads the version from `packageManager` in
+# package.json; we intentionally do NOT pass `version:` so the two never
+# drift. Keep Atlas.slnx everywhere -- this repo uses the .NET 10 slnx
+# format, not the legacy .sln.
 jobs:
   lint-and-typecheck:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
-        with:
-          version: 10
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -25,19 +27,18 @@ jobs:
         with:
           dotnet-version: '10.0.x'
       - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @atlas/schema run build
       - run: pnpm run codegen:check
       - run: pnpm run typecheck
       - run: pnpm run lint
       - run: pnpm run format:check
-      - run: dotnet format Atlas.sln --verify-no-changes
+      - run: dotnet format Atlas.slnx --verify-no-changes
 
   unit:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
-        with:
-          version: 10
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -46,8 +47,9 @@ jobs:
         with:
           dotnet-version: '10.0.x'
       - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @atlas/schema run build
       - run: pnpm test
-      - run: dotnet test Atlas.sln --filter Category=Unit --nologo
+      - run: dotnet test Atlas.slnx --filter Category=Unit --nologo
 
   integration:
     runs-on: ubuntu-latest
@@ -56,15 +58,29 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
-      - run: dotnet test Atlas.sln --filter Category=Integration --nologo
+      - run: dotnet test Atlas.slnx --filter Category=Integration --nologo
 
   e2e:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: atlas
+          POSTGRES_PASSWORD: atlas
+          POSTGRES_DB: atlas
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U atlas -d atlas"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      ATLAS_DB_CONNECTION_STRING: Host=localhost;Port=5433;Database=atlas;Username=atlas;Password=atlas
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
-        with:
-          version: 10
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -73,6 +89,9 @@ jobs:
         with:
           dotnet-version: '10.0.x'
       - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @atlas/schema run build
+      # Migrate + seed the fixture workspace so Playwright can hit spec_s142.
+      - run: dotnet run --project apps/api/Atlas.Api -- seed
       - run: pnpm --filter @atlas/e2e exec playwright install --with-deps
       - run: pnpm run e2e
       - if: failure()
@@ -81,3 +100,4 @@ jobs:
           name: playwright-traces
           path: apps/e2e/test-results/
           retention-days: 14
+          if-no-files-found: ignore
