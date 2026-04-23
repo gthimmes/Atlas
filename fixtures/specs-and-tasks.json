@@ -1,0 +1,276 @@
+{
+  "specs": [
+    {
+      "id": "spec_s142",
+      "workspace": "ws_meridian",
+      "project": "prj_core",
+      "pitch": "pitch_a3f",
+      "parent_spec": null,
+      "title": "Risk-aware auto-merge for L2 agents",
+      "slug": "risk-aware-auto-merge",
+      "status": "in_flight",
+      "version": 14,
+      "head_sha": "3f2a9bd8c1e4f7a2b5d9c3e8f1a6b4d7e9c2f1a5",
+      "intent": "Reduce rollback rate by holding amber-classified PRs for a configurable window before auto-merge, while keeping green PRs on the fast path.",
+      "non_goals": [
+        "No new ML models — classifier stays rules-based",
+        "Do not change payments path allowlist in this bet",
+        "No changes to Spec Editor readiness formula"
+      ],
+      "constraints": [
+        {
+          "id": "c1",
+          "text": "p50 green merge latency must stay under 90s",
+          "category": "performance",
+          "budget": {
+            "metric": "merge_latency_p50",
+            "op": "<=",
+            "value": 90,
+            "unit": "s"
+          }
+        },
+        {
+          "id": "c2",
+          "text": "Rollback rate must drop vs 30-day baseline",
+          "category": "other",
+          "budget": {
+            "metric": "rollback_rate",
+            "op": "<",
+            "value": 0.01,
+            "unit": "fraction"
+          }
+        }
+      ],
+      "acceptance": [
+        {
+          "id": "ac_1",
+          "spec": "spec_s142",
+          "statement": "Green PRs merge within 90s p50",
+          "test_type": "property",
+          "test_ref": {
+            "repo": "meridian/payments@main",
+            "path": "tests/acceptance/ac_green_latency.test.ts",
+            "symbol": "green_latency_p50",
+            "generated": true
+          },
+          "status": "passing",
+          "flakiness_score": 0.0,
+          "last_run_at": "2026-04-22T23:48:00Z",
+          "run_history": [],
+          "owner": "usr_dani",
+          "proposed_by": "agt_be",
+          "accepted": true,
+          "created_at": "2026-04-10T09:00:00Z"
+        },
+        {
+          "id": "ac_2",
+          "spec": "spec_s142",
+          "statement": "Amber PRs hold for configured window (default 1h)",
+          "test_type": "integration",
+          "test_ref": {
+            "repo": "meridian/payments@main",
+            "path": "tests/acceptance/ac_amber_hold.test.ts",
+            "symbol": "amber_hold_respects_config",
+            "generated": true
+          },
+          "status": "passing",
+          "flakiness_score": 0.08,
+          "last_run_at": "2026-04-22T23:48:00Z",
+          "run_history": [],
+          "owner": "usr_dani",
+          "proposed_by": "agt_be",
+          "accepted": true,
+          "created_at": "2026-04-10T09:00:00Z"
+        },
+        {
+          "id": "ac_3",
+          "spec": "spec_s142",
+          "statement": "Red PRs never auto-merge",
+          "test_type": "property",
+          "test_ref": {
+            "repo": "meridian/payments@main",
+            "path": "tests/acceptance/ac_red_never.test.ts",
+            "symbol": "red_never_automerges",
+            "generated": false
+          },
+          "status": "passing",
+          "flakiness_score": 0.0,
+          "last_run_at": "2026-04-22T23:48:00Z",
+          "run_history": [],
+          "owner": "usr_ren",
+          "proposed_by": "usr_ren",
+          "accepted": true,
+          "created_at": "2026-04-10T09:00:00Z"
+        },
+        {
+          "id": "ac_4",
+          "spec": "spec_s142",
+          "statement": "L2 sampled merges appear in next-morning digest",
+          "test_type": "integration",
+          "test_ref": {
+            "repo": "meridian/payments@main",
+            "path": "tests/acceptance/ac_l2_sample_digest.test.ts",
+            "symbol": "l2_sample_reaches_digest",
+            "generated": true
+          },
+          "status": "flaky",
+          "flakiness_score": 0.22,
+          "last_run_at": "2026-04-22T23:48:00Z",
+          "run_history": [],
+          "owner": "usr_ale",
+          "proposed_by": "agt_be",
+          "accepted": true,
+          "created_at": "2026-04-10T09:00:00Z"
+        }
+      ],
+      "decisions": ["adr_hold_default", "adr_rules_only"],
+      "open_questions": [],
+      "context_bundle": "bun_s142",
+      "readiness_score": 92,
+      "readiness_breakdown": {
+        "weights": {
+          "acceptance_structure": 40,
+          "non_goals_present": 20,
+          "constraints_specific": 20,
+          "open_questions": 10,
+          "context_bundle": 10
+        },
+        "components": {
+          "acceptance_structure": {
+            "score": 40,
+            "max": 40,
+            "notes": ["4 criteria; 2 property + 2 integration"]
+          },
+          "non_goals_present": {
+            "score": 20,
+            "max": 20,
+            "notes": ["3 qualifying non-goals"]
+          },
+          "constraints_specific": {
+            "score": 20,
+            "max": 20,
+            "notes": ["2 constraints with numeric budgets"]
+          },
+          "open_questions": {
+            "score": 10,
+            "max": 10,
+            "notes": ["no blocking questions"]
+          },
+          "context_bundle": {
+            "score": 2,
+            "max": 10,
+            "notes": ["bundle present but over token ceiling"]
+          }
+        },
+        "threshold": 70,
+        "gated": false,
+        "computed_at": "2026-04-22T23:48:00Z"
+      },
+      "task_ids": ["task_t511", "task_t512", "task_t513", "task_t514"],
+      "actor_summary": {
+        "humans": ["usr_dani", "usr_ren", "usr_ale"],
+        "agents": ["agt_be", "agt_fe"]
+      },
+      "repo_path": ".atlas/specs/S-142.md",
+      "owner": "usr_dani",
+      "created_at": "2026-04-10T09:00:00Z",
+      "created_by": "usr_dani",
+      "updated_at": "2026-04-22T22:14:00Z",
+      "shipped_at": null
+    }
+  ],
+  "tasks": [
+    {
+      "id": "task_t511",
+      "workspace": "ws_meridian",
+      "parent_spec": "spec_s142",
+      "parent_task": null,
+      "title": "Amber-hold scheduler",
+      "description": "Background worker that holds amber PRs for configured window",
+      "status": "done",
+      "assignee": "usr_dani",
+      "delegated_to": null,
+      "delegation_history": ["sess_7c1a"],
+      "blocks": ["task_t512"],
+      "blocked_by": [],
+      "context_bundle_override": null,
+      "agent_budget": { "acu_ceiling": 2400, "wall_clock_ceiling_sec": 14400 },
+      "risk": "amber",
+      "paths": ["src/merge/scheduler.ts", "src/merge/hold.ts"],
+      "proposed_by": "usr_dani",
+      "approved_by": "usr_dani",
+      "created_at": "2026-04-11T09:00:00Z",
+      "updated_at": "2026-04-16T17:00:00Z",
+      "completed_at": "2026-04-16T17:00:00Z"
+    },
+    {
+      "id": "task_t512",
+      "workspace": "ws_meridian",
+      "parent_spec": "spec_s142",
+      "parent_task": null,
+      "title": "Hold-window config UI",
+      "description": "Admin UI to configure per-project hold window",
+      "status": "review",
+      "assignee": "usr_ren",
+      "delegated_to": "sess_9f2e",
+      "delegation_history": ["sess_9f2e"],
+      "blocks": [],
+      "blocked_by": ["task_t511"],
+      "context_bundle_override": null,
+      "agent_budget": { "acu_ceiling": 1800, "wall_clock_ceiling_sec": 10800 },
+      "risk": "green",
+      "paths": ["src/ui/admin/HoldConfig.tsx"],
+      "proposed_by": "agt_fe",
+      "approved_by": "usr_ren",
+      "created_at": "2026-04-15T10:00:00Z",
+      "updated_at": "2026-04-22T18:00:00Z",
+      "completed_at": null
+    },
+    {
+      "id": "task_t513",
+      "workspace": "ws_meridian",
+      "parent_spec": "spec_s142",
+      "parent_task": null,
+      "title": "Digest: held-PR surface",
+      "description": "Add held-PR section to morning digest",
+      "status": "in_flight",
+      "assignee": "usr_ale",
+      "delegated_to": "sess_2b4d",
+      "delegation_history": ["sess_2b4d"],
+      "blocks": [],
+      "blocked_by": ["task_t511"],
+      "context_bundle_override": null,
+      "agent_budget": { "acu_ceiling": 1200, "wall_clock_ceiling_sec": 7200 },
+      "risk": "green",
+      "paths": ["src/digest/sections/held.tsx", "src/digest/query.ts"],
+      "proposed_by": "agt_fe",
+      "approved_by": "usr_ale",
+      "created_at": "2026-04-18T10:00:00Z",
+      "updated_at": "2026-04-22T22:00:00Z",
+      "completed_at": null
+    },
+    {
+      "id": "task_t514",
+      "workspace": "ws_meridian",
+      "parent_spec": "spec_s142",
+      "parent_task": null,
+      "title": "Classifier: ml_model signal",
+      "description": "Add ml_model file signal to risk classifier",
+      "status": "blocked",
+      "assignee": "usr_dani",
+      "delegated_to": null,
+      "delegation_history": [],
+      "blocks": [],
+      "blocked_by": [],
+      "context_bundle_override": null,
+      "agent_budget": null,
+      "risk": "red",
+      "paths": ["src/classifier/signals/ml.ts"],
+      "proposed_by": "agt_be",
+      "approved_by": null,
+      "created_at": "2026-04-20T14:00:00Z",
+      "updated_at": "2026-04-22T09:00:00Z",
+      "completed_at": null
+    }
+  ]
+}

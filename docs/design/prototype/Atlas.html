@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Atlas</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="src/tokens.css">
+<style>
+html, body, #root { height: 100%; }
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(1.3); }
+}
+</style>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+</head>
+<body class="theme-dark">
+<div id="root"></div>
+
+<script type="text/babel" src="src/components.jsx"></script>
+<script type="text/babel" src="src/data.jsx"></script>
+<script type="text/babel" src="src/work_graph.jsx"></script>
+<script type="text/babel" src="src/spec_editor.jsx"></script>
+<script type="text/babel" src="src/agent_panels.jsx"></script>
+
+<script type="text/babel">
+const { useState, useEffect } = React;
+
+const TWEAKS = /*EDITMODE-BEGIN*/{
+  "accent_human": "electric",
+  "accent_agent": "sky",
+  "split_view": false,
+  "density": "comfortable"
+}/*EDITMODE-END*/;
+
+const ACCENT_PRESETS = {
+  human: {
+    electric: { dark: 'oklch(0.68 0.17 250)', light: 'oklch(0.55 0.19 250)' },
+    amber:    { dark: 'oklch(0.78 0.17 75)',  light: 'oklch(0.62 0.19 75)' },
+    violet:   { dark: 'oklch(0.66 0.18 295)', light: 'oklch(0.54 0.20 295)' },
+    teal:     { dark: 'oklch(0.72 0.14 200)', light: 'oklch(0.55 0.16 200)' },
+  },
+  agent: {
+    acid:     { dark: 'oklch(0.80 0.18 145)', light: 'oklch(0.58 0.19 145)' },
+    magenta:  { dark: 'oklch(0.72 0.20 340)', light: 'oklch(0.58 0.22 340)' },
+    orange:   { dark: 'oklch(0.74 0.17 45)',  light: 'oklch(0.60 0.19 45)' },
+    sky:      { dark: 'oklch(0.78 0.14 220)', light: 'oklch(0.60 0.16 220)' },
+  },
+};
+
+function App() {
+  const [view, setView] = useState(() => localStorage.getItem('atlas.view') || 'graph');
+  const [specId, setSpecId] = useState('S-142');
+  const [sessionId] = useState('sess-3a9f');
+  const [tweaks, setTweaks] = useState(TWEAKS);
+  const [editMode, setEditMode] = useState(false);
+  const [splitTheme, setSplitTheme] = useState(tweaks.split_view);
+  const [soloTheme, setSoloTheme] = useState('dark');
+
+  useEffect(() => { localStorage.setItem('atlas.view', view); }, [view]);
+
+  // Edit-mode bridge
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.data?.type === '__activate_edit_mode') setEditMode(true);
+      if (e.data?.type === '__deactivate_edit_mode') setEditMode(false);
+    };
+    window.addEventListener('message', handler);
+    window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+    return () => window.removeEventListener('message', handler);
+  }, []);
+
+  const saveTweak = (edits) => {
+    const next = { ...tweaks, ...edits };
+    setTweaks(next);
+    setSplitTheme(next.split_view);
+    window.parent.postMessage({ type: '__edit_mode_set_keys', edits }, '*');
+  };
+
+  // Apply accent vars on each themed pane
+  const applyAccents = (el, theme) => {
+    if (!el) return;
+    const h = ACCENT_PRESETS.human[tweaks.accent_human] || ACCENT_PRESETS.human.electric;
+    const a = ACCENT_PRESETS.agent[tweaks.accent_agent] || ACCENT_PRESETS.agent.acid;
+    el.style.setProperty('--accent-human', h[theme]);
+    el.style.setProperty('--accent-agent', a[theme]);
+  };
+
+  const onOpenSpec = (id) => { setSpecId(id); setView('spec'); };
+  const onOpenGraph = () => setView('graph');
+
+  const renderSurface = () => {
+    if (view === 'graph') return <WorkGraph onOpenSpec={onOpenSpec}/>;
+    if (view === 'spec')  return <SpecEditor specId={specId} onOpenGraph={onOpenGraph}/>;
+    if (view === 'run')   return <AgentRunPanel sessionId={sessionId}/>;
+    if (view === 'digest') return <AgentDigest/>;
+    return null;
+  };
+
+  const nav = (
+    <Nav view={view} onChange={setView} splitTheme={splitTheme} setSplitTheme={(v) => { setSplitTheme(v); saveTweak({ split_view: v }); }} soloTheme={soloTheme} setSoloTheme={setSoloTheme}/>
+  );
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: '#0b0c0e' }}>
+      {nav}
+      <div style={{ flex: 1, minHeight: 0, display: 'flex' }}>
+        {splitTheme ? (
+          <>
+            <div ref={(el) => applyAccents(el, 'dark')} className="theme-dark" style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', borderRight: '1px solid oklch(0.30 0.015 250)' }}>
+              <ThemeBadge label="dark"/>
+              <div style={{ flex: 1, minHeight: 0 }}>{renderSurface()}</div>
+            </div>
+            <div ref={(el) => applyAccents(el, 'light')} className="theme-light" style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+              <ThemeBadge label="light" light/>
+              <div style={{ flex: 1, minHeight: 0 }}>{renderSurface()}</div>
+            </div>
+          </>
+        ) : (
+          <div ref={(el) => applyAccents(el, soloTheme)} className={`theme-${soloTheme}`} style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+            <div style={{ flex: 1, minHeight: 0 }}>{renderSurface()}</div>
+          </div>
+        )}
+      </div>
+
+      {editMode && <TweaksPanel tweaks={tweaks} onChange={saveTweak}/>}
+    </div>
+  );
+}
+
+function ThemeBadge({ label, light }) {
+  return (
+    <div style={{
+      position: 'absolute', top: 58, right: 14,
+      fontFamily: 'var(--font-mono)', fontSize: 9, fontWeight: 600,
+      letterSpacing: 1, textTransform: 'uppercase',
+      color: 'var(--fg-3)',
+      padding: '3px 7px',
+      background: 'var(--bg-1)',
+      border: '1px solid var(--line-1)',
+      borderRadius: 999,
+      zIndex: 20,
+    }}>{label}</div>
+  );
+}
+
+function Nav({ view, onChange, splitTheme, setSplitTheme, soloTheme, setSoloTheme }) {
+  const items = [
+    { id: 'graph',  label: 'Work graph', icon: 'graph', kbd: 'G' },
+    { id: 'spec',   label: 'Spec',       icon: 'spec',  kbd: 'S' },
+    { id: 'run',    label: 'Agent run',  icon: 'agent', kbd: 'R' },
+    { id: 'digest', label: 'Digest',     icon: 'digest',kbd: 'D' },
+  ];
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+      const m = { g: 'graph', s: 'spec', r: 'run', d: 'digest' };
+      if (m[e.key]) onChange(m[e.key]);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+  return (
+    <div className="theme-dark" style={{
+      display: 'flex', alignItems: 'center', gap: 8,
+      padding: '8px 14px',
+      background: '#0f1013',
+      borderBottom: '1px solid #1e2026',
+      color: '#e6e8ec',
+      fontFamily: 'var(--font-sans)',
+      flexShrink: 0,
+      height: 44,
+    }}>
+      {/* Logo */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingRight: 10, borderRight: '1px solid #1e2026', marginRight: 6 }}>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <circle cx="8" cy="8" r="7" stroke="oklch(0.68 0.17 250)" strokeWidth="1.5"/>
+          <circle cx="8" cy="8" r="3" fill="oklch(0.80 0.18 145)"/>
+          <circle cx="3" cy="4" r="1.2" fill="oklch(0.68 0.17 250)"/>
+          <circle cx="13" cy="4" r="1.2" fill="oklch(0.68 0.17 250)"/>
+          <circle cx="3" cy="12" r="1.2" fill="oklch(0.68 0.17 250)"/>
+          <circle cx="13" cy="12" r="1.2" fill="oklch(0.68 0.17 250)"/>
+        </svg>
+        <span style={{ fontWeight: 600, fontSize: 13, letterSpacing: 0.3 }}>Atlas</span>
+        <span className="mono" style={{ fontSize: 10, color: '#7a7f8a' }}>/ meridian-payments</span>
+      </div>
+
+      {/* Nav items */}
+      <div style={{ display: 'flex', gap: 2 }}>
+        {items.map(it => (
+          <button key={it.id} onClick={() => onChange(it.id)} style={{
+            display: 'inline-flex', alignItems: 'center', gap: 6,
+            padding: '5px 10px',
+            background: view === it.id ? '#1e2026' : 'transparent',
+            color: view === it.id ? '#fff' : '#a0a5b0',
+            border: 'none', borderRadius: 5, cursor: 'pointer',
+            fontSize: 12, fontWeight: 500,
+          }}>
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+              {it.icon === 'graph' && <><circle cx="3" cy="8" r="1.6"/><circle cx="13" cy="4" r="1.6"/><circle cx="13" cy="12" r="1.6"/><path d="M4.4 7.2l7.2-2.4M4.4 8.8l7.2 2.4"/></>}
+              {it.icon === 'spec' && <><path d="M4 2h6l2 2v10H4z"/><path d="M6 6h4M6 8.5h4M6 11h2.5"/></>}
+              {it.icon === 'agent' && <><circle cx="8" cy="6" r="2.5"/><path d="M3.5 13c.5-2.2 2.3-3.5 4.5-3.5s4 1.3 4.5 3.5"/></>}
+              {it.icon === 'digest' && <><path d="M3 4h10M3 8h10M3 12h6"/></>}
+            </svg>
+            {it.label}
+            <span style={{ fontSize: 9, padding: '1px 4px', background: '#0b0c0e', border: '1px solid #2a2d35', borderRadius: 3, fontFamily: 'var(--font-mono)', color: '#7a7f8a' }}>{it.kbd}</span>
+          </button>
+        ))}
+      </div>
+
+      <div style={{ flex: 1 }}/>
+
+      {/* Search */}
+      <div style={{
+        display: 'inline-flex', alignItems: 'center', gap: 6,
+        padding: '4px 10px', width: 280,
+        background: '#0b0c0e', border: '1px solid #1e2026', borderRadius: 5,
+        color: '#7a7f8a', fontSize: 12,
+      }}>
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><circle cx="7" cy="7" r="4"/><path d="M10 10l3 3"/></svg>
+        <span style={{ flex: 1 }}>Jump to spec, task, agent…</span>
+        <span style={{ fontSize: 9, padding: '1px 4px', background: '#1e2026', borderRadius: 3, fontFamily: 'var(--font-mono)' }}>⌘K</span>
+      </div>
+
+      {/* Theme toggle */}
+      <div style={{ display: 'inline-flex', background: '#1e2026', border: '1px solid #2a2d35', borderRadius: 5, padding: 2, gap: 0 }}>
+        <button onClick={() => setSplitTheme(true)} style={{
+          padding: '3px 8px', fontSize: 10,
+          background: splitTheme ? '#0b0c0e' : 'transparent',
+          color: splitTheme ? '#fff' : '#a0a5b0',
+          border: 'none', borderRadius: 3, cursor: 'pointer',
+          fontFamily: 'var(--font-mono)',
+        }}>split</button>
+        <button onClick={() => { setSplitTheme(false); setSoloTheme('dark'); }} style={{
+          padding: '3px 8px', fontSize: 10,
+          background: !splitTheme && soloTheme === 'dark' ? '#0b0c0e' : 'transparent',
+          color: !splitTheme && soloTheme === 'dark' ? '#fff' : '#a0a5b0',
+          border: 'none', borderRadius: 3, cursor: 'pointer',
+        }}>●</button>
+        <button onClick={() => { setSplitTheme(false); setSoloTheme('light'); }} style={{
+          padding: '3px 8px', fontSize: 10,
+          background: !splitTheme && soloTheme === 'light' ? '#0b0c0e' : 'transparent',
+          color: !splitTheme && soloTheme === 'light' ? '#fff' : '#a0a5b0',
+          border: 'none', borderRadius: 3, cursor: 'pointer',
+        }}>○</button>
+      </div>
+
+      {/* Workspace avatars */}
+      <div style={{ display: 'flex', gap: -4 }}>
+        {window.HUMANS.slice(0, 3).map((h, i) => (
+          <div key={h.id} style={{
+            width: 22, height: 22, borderRadius: 999,
+            background: 'oklch(0.55 0.19 250)', color: '#fff',
+            fontSize: 10, fontWeight: 600,
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            marginLeft: i === 0 ? 0 : -6, border: '2px solid #0f1013',
+          }}>{h.name.split(' ').map(s => s[0]).join('')}</div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function TweaksPanel({ tweaks, onChange }) {
+  return (
+    <div className="theme-dark" style={{
+      position: 'fixed', bottom: 16, right: 16, zIndex: 1000,
+      width: 280,
+      background: 'var(--bg-1)',
+      border: '1px solid var(--line-2)',
+      borderRadius: 'var(--r-3)',
+      boxShadow: 'var(--shadow-2)',
+      color: 'var(--fg-0)',
+      fontFamily: 'var(--font-sans)',
+      fontSize: 12,
+    }}>
+      <div style={{ padding: '10px 12px', borderBottom: '1px solid var(--line-1)', fontSize: 11, fontWeight: 600, letterSpacing: 0.3 }}>Tweaks</div>
+      <div style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <TweakRow label="Human accent">
+          <SwatchRow options={ACCENT_PRESETS.human} current={tweaks.accent_human} onPick={(k) => onChange({ accent_human: k })}/>
+        </TweakRow>
+        <TweakRow label="Agent accent">
+          <SwatchRow options={ACCENT_PRESETS.agent} current={tweaks.accent_agent} onPick={(k) => onChange({ accent_agent: k })}/>
+        </TweakRow>
+        <TweakRow label="Compare themes">
+          <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11 }}>
+            <input type="checkbox" checked={tweaks.split_view} onChange={(e) => onChange({ split_view: e.target.checked })}/>
+            Split dark / light side-by-side
+          </label>
+        </TweakRow>
+      </div>
+    </div>
+  );
+}
+
+function TweakRow({ label, children }) {
+  return (
+    <div>
+      <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--fg-3)', letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 6 }}>{label}</div>
+      {children}
+    </div>
+  );
+}
+
+function SwatchRow({ options, current, onPick }) {
+  return (
+    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+      {Object.entries(options).map(([k, v]) => (
+        <button key={k} onClick={() => onPick(k)} title={k}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 6,
+            padding: '3px 8px 3px 4px',
+            background: current === k ? 'var(--bg-3)' : 'var(--bg-2)',
+            border: `1px solid ${current === k ? 'var(--fg-0)' : 'var(--line-2)'}`,
+            borderRadius: 999, cursor: 'pointer',
+            fontSize: 10, color: 'var(--fg-1)',
+            fontFamily: 'var(--font-mono)',
+          }}>
+          <span style={{ width: 12, height: 12, borderRadius: 999, background: v.dark }}/>
+          {k}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

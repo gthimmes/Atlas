@@ -1,0 +1,7 @@
+<Solution>
+  <Folder Name="/apps/" />
+  <Folder Name="/apps/api/">
+    <Project Path="apps/api/Atlas.Api.Tests/Atlas.Api.Tests.csproj" />
+    <Project Path="apps/api/Atlas.Api/Atlas.Api.csproj" />
+  </Folder>
+</Solution>

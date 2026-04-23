@@ -1,0 +1,13 @@
+# Normalize line endings to LF for everything, let git translate for Windows checkouts.
+* text=auto eol=lf
+
+# Binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.webm binary

@@ -1,0 +1,22 @@
+{
+  "name": "@atlas/schema-codegen",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "emit": "tsx src/cli.ts emit",
+    "check": "tsx src/cli.ts check",
+    "typecheck": "tsc --noEmit",
+    "lint": "echo \"(eslint wired in task #9)\" && exit 0",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "ts-morph": "24.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "22.9.0",
+    "tsx": "4.19.2",
+    "typescript": "5.6.3",
+    "vitest": "2.1.4"
+  }
+}

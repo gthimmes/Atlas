@@ -1,0 +1,174 @@
+/* Atlas -- design tokens. Dark + light.
+ * Synced from docs/design/prototype/src/tokens.css. If the prototype
+ * changes, re-copy (or later: vendor into a shared package).
+ */
+
+:root {
+  /* Type */
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+  --fs-11: 11px;
+  --fs-12: 12px;
+  --fs-13: 13px;
+  --fs-14: 14px;
+  --fs-16: 16px;
+  --fs-20: 20px;
+  --fs-24: 24px;
+  --fs-32: 32px;
+
+  --lh-tight: 1.25;
+  --lh-normal: 1.45;
+  --lh-prose: 1.6;
+
+  --fw-regular: 420;
+  --fw-medium: 520;
+  --fw-semibold: 600;
+
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 20px;
+  --s-6: 24px;
+  --s-8: 32px;
+  --s-10: 40px;
+
+  --r-1: 3px;
+  --r-2: 5px;
+  --r-3: 7px;
+  --r-4: 10px;
+  --r-pill: 999px;
+
+  --ease: cubic-bezier(0.2, 0.6, 0.2, 1);
+  --dur-fast: 120ms;
+  --dur-med: 220ms;
+
+  --accent-human: oklch(0.68 0.17 250);
+  --accent-agent: oklch(0.8 0.18 145);
+  --accent-mixed: oklch(0.74 0.14 200);
+
+  --signal-red: oklch(0.65 0.2 25);
+  --signal-amber: oklch(0.78 0.17 75);
+  --signal-green: oklch(0.76 0.18 145);
+  --signal-violet: oklch(0.66 0.18 295);
+}
+
+.theme-dark {
+  --bg-0: oklch(0.17 0.01 250);
+  --bg-1: oklch(0.2 0.012 250);
+  --bg-2: oklch(0.23 0.013 250);
+  --bg-3: oklch(0.27 0.014 250);
+  --bg-inset: oklch(0.14 0.01 250);
+
+  --line-1: oklch(0.3 0.015 250);
+  --line-2: oklch(0.35 0.017 250);
+  --line-strong: oklch(0.42 0.02 250);
+
+  --fg-0: oklch(0.96 0.005 250);
+  --fg-1: oklch(0.82 0.007 250);
+  --fg-2: oklch(0.65 0.01 250);
+  --fg-3: oklch(0.5 0.012 250);
+
+  --chip-bg: oklch(0.25 0.013 250);
+  --chip-border: oklch(0.33 0.015 250);
+
+  --shadow-1: 0 1px 0 oklch(0.12 0.01 250 / 0.6), 0 1px 2px oklch(0 0 0 / 0.3);
+  --shadow-2: 0 4px 16px oklch(0 0 0 / 0.35);
+
+  --scrim: oklch(0.1 0.01 250 / 0.6);
+}
+
+.theme-light {
+  --bg-0: oklch(0.985 0.003 250);
+  --bg-1: oklch(1 0 0);
+  --bg-2: oklch(0.97 0.004 250);
+  --bg-3: oklch(0.94 0.005 250);
+  --bg-inset: oklch(0.96 0.004 250);
+
+  --line-1: oklch(0.9 0.006 250);
+  --line-2: oklch(0.84 0.008 250);
+  --line-strong: oklch(0.72 0.01 250);
+
+  --fg-0: oklch(0.2 0.012 250);
+  --fg-1: oklch(0.32 0.011 250);
+  --fg-2: oklch(0.48 0.01 250);
+  --fg-3: oklch(0.62 0.009 250);
+
+  --chip-bg: oklch(0.96 0.005 250);
+  --chip-border: oklch(0.88 0.007 250);
+
+  --shadow-1: 0 1px 0 oklch(0.85 0.006 250 / 0.7), 0 1px 2px oklch(0.5 0.01 250 / 0.08);
+  --shadow-2: 0 4px 20px oklch(0.4 0.01 250 / 0.1);
+
+  --scrim: oklch(0.2 0.01 250 / 0.35);
+
+  --accent-human: oklch(0.55 0.19 250);
+  --accent-agent: oklch(0.58 0.19 145);
+  --accent-mixed: oklch(0.58 0.13 200);
+}
+
+* {
+  box-sizing: border-box;
+}
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+body {
+  font-family: var(--font-sans);
+  font-size: var(--fs-13);
+  line-height: var(--lh-normal);
+  color: var(--fg-0);
+  background: var(--bg-0);
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: 'cv11', 'ss01';
+}
+
+button {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+input,
+textarea {
+  font-family: inherit;
+}
+
+::selection {
+  background: var(--accent-human);
+  color: var(--bg-0);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--line-2);
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--line-strong);
+  background-clip: content-box;
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-feature-settings: 'zero', 'ss01';
+}
+.dim {
+  color: var(--fg-2);
+}
+.faint {
+  color: var(--fg-3);
+}

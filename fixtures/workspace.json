@@ -1,0 +1,127 @@
+{
+  "workspace": {
+    "id": "ws_meridian",
+    "name": "Meridian Payments",
+    "slug": "meridian",
+    "plan": "business",
+    "acu_per_week": 12000,
+    "default_cool_down_weeks": 2,
+    "default_bet_weeks": 6,
+    "notification_model": "digest",
+    "spec_sync": {
+      "enabled": true,
+      "repo": "meridian/payments@main",
+      "path_prefix": ".atlas/specs/"
+    },
+    "adr_sync": {
+      "enabled": true,
+      "repo": "meridian/payments@main",
+      "path_prefix": "docs/decisions/"
+    },
+    "created_at": "2025-08-14T10:00:00Z"
+  },
+  "users": [
+    {
+      "id": "usr_dani",
+      "workspace": "ws_meridian",
+      "email": "dani@meridian.co",
+      "name": "Dani Okafor",
+      "role": "admin",
+      "created_at": "2025-08-14T10:00:00Z"
+    },
+    {
+      "id": "usr_ren",
+      "workspace": "ws_meridian",
+      "email": "ren@meridian.co",
+      "name": "Ren Takahashi",
+      "role": "member",
+      "created_at": "2025-08-14T10:00:00Z"
+    },
+    {
+      "id": "usr_ale",
+      "workspace": "ws_meridian",
+      "email": "ale@meridian.co",
+      "name": "Alejandra Quinn",
+      "role": "member",
+      "created_at": "2025-08-14T10:00:00Z"
+    }
+  ],
+  "agents": [
+    {
+      "id": "agt_be",
+      "workspace": "ws_meridian",
+      "handle": "claude-backend",
+      "model": "claude-opus-4-7",
+      "oauth_issuer": "anthropic",
+      "owner": "usr_dani",
+      "description": "backend specialist",
+      "approved": true,
+      "trust_history": [
+        { "project": "prj_core", "tier": "L1", "promoted_at": "2025-10-02T00:00:00Z" }
+      ],
+      "stats": {
+        "sessions_total": 142,
+        "first_pass_rate": 0.86,
+        "avg_cost_acu": 1420,
+        "last_active": "2026-04-22T20:14:00Z"
+      }
+    },
+    {
+      "id": "agt_fe",
+      "workspace": "ws_meridian",
+      "handle": "claude-frontend",
+      "model": "claude-opus-4-7",
+      "oauth_issuer": "anthropic",
+      "owner": "usr_dani",
+      "description": "frontend specialist",
+      "approved": true,
+      "trust_history": [
+        { "project": "prj_core", "tier": "L1", "promoted_at": "2025-10-08T00:00:00Z" }
+      ],
+      "stats": {
+        "sessions_total": 98,
+        "first_pass_rate": 0.91,
+        "avg_cost_acu": 980,
+        "last_active": "2026-04-22T22:02:00Z"
+      }
+    },
+    {
+      "id": "agt_rev",
+      "workspace": "ws_meridian",
+      "handle": "reviewer-bot",
+      "model": "claude-sonnet-4-5",
+      "oauth_issuer": "anthropic",
+      "owner": "usr_dani",
+      "description": "PR reviewer",
+      "approved": true,
+      "trust_history": [
+        { "project": "prj_core", "tier": "L0", "promoted_at": "2025-08-20T00:00:00Z" }
+      ],
+      "stats": {
+        "sessions_total": 311,
+        "first_pass_rate": 0.72,
+        "avg_cost_acu": 210,
+        "last_active": "2026-04-22T23:10:00Z"
+      }
+    },
+    {
+      "id": "agt_ops",
+      "workspace": "ws_meridian",
+      "handle": "ops-ambient",
+      "model": "claude-haiku-4-5",
+      "oauth_issuer": "anthropic",
+      "owner": "usr_dani",
+      "description": "ambient ops monitor",
+      "approved": true,
+      "trust_history": [
+        { "project": "prj_core", "tier": "L2", "promoted_at": "2025-11-12T00:00:00Z" }
+      ],
+      "stats": {
+        "sessions_total": 2140,
+        "first_pass_rate": 0.98,
+        "avg_cost_acu": 48,
+        "last_active": "2026-04-23T00:45:00Z"
+      }
+    }
+  ]
+}

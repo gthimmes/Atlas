@@ -1,0 +1,10 @@
+node_modules/
+dist/
+build/
+coverage/
+pnpm-lock.yaml
+apps/api/
+docs/design/
+apps/web/dist/
+test-results/
+playwright-report/

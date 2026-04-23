@@ -1,0 +1,26 @@
+{
+  "name": "atlas",
+  "version": "0.0.0",
+  "private": true,
+  "packageManager": "pnpm@10.33.2",
+  "engines": {
+    "node": ">=22.0.0",
+    "pnpm": ">=10.0.0"
+  },
+  "scripts": {
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "pnpm -r lint",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "pnpm -r test",
+    "codegen": "pnpm --filter @atlas/schema-codegen run emit",
+    "codegen:check": "pnpm --filter @atlas/schema-codegen run check",
+    "e2e": "pnpm --filter @atlas/e2e run test",
+    "dev:web": "pnpm --filter @atlas/web run dev"
+  },
+  "devDependencies": {
+    "prettier": "3.3.3",
+    "typescript": "5.6.3"
+  }
+}
