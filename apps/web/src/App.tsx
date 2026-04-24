@@ -5,6 +5,8 @@ import { SpecEditor } from './features/specs/SpecEditor.js';
 import { WorkGraph } from './features/graph/WorkGraph.js';
 import { TaskDetailPanel } from './features/tasks/TaskDetailPanel.js';
 import { NewSpecDialog } from './features/specs/NewSpecDialog.js';
+import { ProjectsDialog } from './features/projects/ProjectsDialog.js';
+import { useProjects } from './features/projects/store.js';
 import { HelpDrawer } from './help/HelpDrawer.js';
 import { FirstRunModal } from './help/FirstRunModal.js';
 import { useHelp } from './help/store.js';
@@ -29,9 +31,11 @@ export function App() {
   );
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
   const [newSpecOpen, setNewSpecOpen] = useState(false);
+  const [projectsOpen, setProjectsOpen] = useState(false);
   // Bump this to force WorkGraph (and any other list consumer) to refetch
   // after mutations we can't subscribe to (new spec, reset).
   const [workspaceRev, setWorkspaceRev] = useState(0);
+  const activeProjectId = useProjects((s) => s.activeProjectId);
 
   useEffect(() => {
     localStorage.setItem('atlas.theme', theme);
@@ -63,6 +67,8 @@ export function App() {
         theme={theme}
         onToggleTheme={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
         onNewSpec={() => setNewSpecOpen(true)}
+        onManageProjects={() => setProjectsOpen(true)}
+        onNewProject={() => setProjectsOpen(true)}
       />
       <main
         style={{
@@ -78,7 +84,8 @@ export function App() {
           <SpecEditor specId={activeSpecId} />
         ) : view === 'graph' ? (
           <WorkGraph
-            key={workspaceRev}
+            key={`${workspaceRev}-${activeProjectId ?? 'all'}`}
+            projectId={activeProjectId}
             onOpenSpec={openSpec}
             onOpenTask={setActiveTaskId}
             onCreateFirstSpec={() => setNewSpecOpen(true)}
@@ -127,6 +134,7 @@ export function App() {
           }}
         />
       )}
+      {projectsOpen && <ProjectsDialog onClose={() => setProjectsOpen(false)} />}
       <FirstRunModal />
       <HelpDrawer />
     </div>

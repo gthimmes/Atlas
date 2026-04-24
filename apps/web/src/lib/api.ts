@@ -10,6 +10,7 @@ export interface ProjectSummary {
   slug: string;
   name: string;
   created_at: string;
+  spec_count: number;
 }
 
 export class ApiError extends Error {

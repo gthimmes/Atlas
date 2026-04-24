@@ -5,6 +5,7 @@
 import welcome from './welcome.md?raw';
 import concepts from './concepts.md?raw';
 import readingWorkGraph from './reading-work-graph.md?raw';
+import projects from './projects.md?raw';
 import yourFirstSpec from './your-first-spec.md?raw';
 import acceptance from './acceptance-criteria.md?raw';
 import readinessGate from './readiness-gate.md?raw';
@@ -30,6 +31,7 @@ export const HELP_SECTIONS: HelpSection[] = [
   section('welcome', 'Welcome', welcome),
   section('concepts', 'The 11 primitives in 2 minutes', concepts),
   section('reading-work-graph', 'Reading the Work Graph', readingWorkGraph),
+  section('projects', 'Projects', projects),
   section('your-first-spec', 'Your first spec', yourFirstSpec),
   section('acceptance-criteria', 'Acceptance criteria', acceptance),
   section('readiness-gate', 'The readiness gate', readinessGate),

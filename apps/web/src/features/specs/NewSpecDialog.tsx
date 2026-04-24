@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { User } from '@atlas/schema';
 import { createSpec, listProjects, listUsers, type ProjectSummary } from '../../lib/api.js';
+import { useProjects } from '../projects/store.js';
 
 interface Props {
   onClose: () => void;
@@ -8,6 +9,7 @@ interface Props {
 }
 
 export function NewSpecDialog({ onClose, onCreated }: Props) {
+  const activeProjectId = useProjects((s) => s.activeProjectId);
   const [title, setTitle] = useState('');
   const [projects, setProjects] = useState<ProjectSummary[] | null>(null);
   const [users, setUsers] = useState<User[] | null>(null);
@@ -24,14 +26,19 @@ export function NewSpecDialog({ onClose, onCreated }: Props) {
         if (cancelled) return;
         setProjects(p.items);
         setUsers(u.items);
-        if (p.items[0]) setProject(p.items[0].id);
+        // Prefer the active project from the switcher; fall back to the first.
+        const defaultProject =
+          activeProjectId && p.items.some((x) => x.id === activeProjectId)
+            ? activeProjectId
+            : (p.items[0]?.id ?? '');
+        setProject(defaultProject);
         if (u.items[0]) setOwner(u.items[0].id);
       })
       .catch((e: Error) => !cancelled && setErr(e.message));
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [activeProjectId]);
 
   const submit = async () => {
     if (!title.trim() || !project || !owner) return;
@@ -44,6 +51,8 @@ export function NewSpecDialog({ onClose, onCreated }: Props) {
         owner,
         ...(trimmed ? { intent: trimmed } : {}),
       });
+      // Refresh the switcher's counts so "Payments · 3 specs" stays accurate.
+      void useProjects.getState().refresh();
       onCreated(id);
     } catch (e) {
       setErr((e as Error).message);

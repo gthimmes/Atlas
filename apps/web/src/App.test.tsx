@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { App } from './App.js';
+import { useProjects } from './features/projects/store.js';
 
 // The App now calls fetch via SpecEditor/WorkGraph depending on view.
 // Stub fetch with responses keyed by URL so each test is deterministic.
@@ -23,7 +24,21 @@ const stubFetch = () => {
       return new Response(JSON.stringify({ items: [], next_cursor: null }), { status: 200 });
     }
     if (url.startsWith('/v1/projects')) {
-      return new Response(JSON.stringify({ items: [] }), { status: 200 });
+      return new Response(
+        JSON.stringify({
+          items: [
+            {
+              id: 'prj_core',
+              workspace: 'ws_meridian',
+              slug: 'core',
+              name: 'Core',
+              created_at: '2026-04-23T00:00:00Z',
+              spec_count: 1,
+            },
+          ],
+        }),
+        { status: 200 },
+      );
     }
     if (url.startsWith('/v1/users')) {
       return new Response(JSON.stringify({ items: [] }), { status: 200 });
@@ -98,6 +113,12 @@ const stubSpec = {
 describe('<App />', () => {
   beforeEach(() => {
     localStorage.clear();
+    useProjects.setState({
+      projects: null,
+      activeProjectId: null,
+      loading: false,
+      error: null,
+    });
     stubFetch();
   });
   afterEach(() => vi.unstubAllGlobals());
@@ -113,6 +134,13 @@ describe('<App />', () => {
   it('exposes a + New spec button in the nav', () => {
     render(<App />);
     expect(screen.getByTestId('new-spec-button')).toBeInTheDocument();
+  });
+
+  it('renders a project switcher with the active project label', async () => {
+    render(<App />);
+    const switcher = screen.getByTestId('project-switcher');
+    expect(switcher).toBeInTheDocument();
+    await waitFor(() => expect(switcher).toHaveTextContent(/Core/));
   });
 
   it('toggles theme when the badge is clicked', async () => {

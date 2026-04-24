@@ -21,6 +21,8 @@ interface Props {
   onOpenSpec: (id: string) => void;
   onOpenTask?: (id: string) => void;
   onCreateFirstSpec?: () => void;
+  /** When set, the graph filters specs to this project. */
+  projectId?: string | null;
 }
 
 const nodeTypes: NodeTypes = {
@@ -39,7 +41,7 @@ const LAYOUT = {
   taskGapY: 90,
 };
 
-export function WorkGraph({ onOpenSpec, onOpenTask, onCreateFirstSpec }: Props) {
+export function WorkGraph({ onOpenSpec, onOpenTask, onCreateFirstSpec, projectId }: Props) {
   const [specs, setSpecs] = useState<Spec[] | null>(null);
   const [tasks, setTasks] = useState<Task[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -48,17 +50,19 @@ export function WorkGraph({ onOpenSpec, onOpenTask, onCreateFirstSpec }: Props) 
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all([listSpecs(), listTasks()])
+    Promise.all([projectId ? listSpecs({ project: projectId }) : listSpecs(), listTasks()])
       .then(([s, t]) => {
         if (cancelled) return;
         setSpecs(s.items);
-        setTasks(t.items);
+        // Only keep tasks that belong to the visible specs.
+        const specIds = new Set(s.items.map((x) => x.id));
+        setTasks(t.items.filter((task) => specIds.has(task.parent_spec)));
       })
       .catch((e: Error) => !cancelled && setErr(e.message));
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [projectId]);
 
   const { nodes, edges } = useMemo(() => {
     if (!specs || !tasks) return { nodes: [] as Node[], edges: [] as Edge[] };

@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useHelp } from '../help/store.js';
+import { ProjectSwitcher } from '../features/projects/ProjectSwitcher.js';
 
 type View = 'graph' | 'spec' | 'run' | 'digest';
 
@@ -9,6 +10,8 @@ interface Props {
   theme: 'dark' | 'light';
   onToggleTheme: () => void;
   onNewSpec: () => void;
+  onManageProjects: () => void;
+  onNewProject: () => void;
 }
 
 const ITEMS: Array<{ id: View; label: string; kbd: string }> = [
@@ -18,7 +21,15 @@ const ITEMS: Array<{ id: View; label: string; kbd: string }> = [
   { id: 'digest', label: 'Digest', kbd: 'D' },
 ];
 
-export function Nav({ view, onChange, theme, onToggleTheme, onNewSpec }: Props) {
+export function Nav({
+  view,
+  onChange,
+  theme,
+  onToggleTheme,
+  onNewSpec,
+  onManageProjects,
+  onNewProject,
+}: Props) {
   const toggleHelp = useHelp((s) => s.toggle);
 
   useEffect(() => {
@@ -65,9 +76,11 @@ export function Nav({ view, onChange, theme, onToggleTheme, onNewSpec }: Props) 
       >
         <Logo />
         <span style={{ fontWeight: 600, fontSize: 'var(--fs-13)', letterSpacing: 0.3 }}>Atlas</span>
-        <span className="mono" style={{ fontSize: 10, color: 'var(--fg-3)' }}>
-          / meridian-payments
-        </span>
+        <ProjectSwitcher
+          workspaceLabel="meridian"
+          onCreate={onNewProject}
+          onManage={onManageProjects}
+        />
       </div>
 
       <div style={{ display: 'flex', gap: 2 }}>

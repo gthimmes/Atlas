@@ -175,7 +175,14 @@ public static class WorkspaceToolEndpoints
     {
         using var conn = factory.Open();
         var rows = await conn.QueryAsync(new CommandDefinition(
-            "SELECT id, workspace, slug, name, created_at FROM project ORDER BY name;",
+            """
+            SELECT p.id, p.workspace, p.slug, p.name, p.created_at,
+                   COUNT(s.id) AS spec_count
+            FROM project p
+            LEFT JOIN spec s ON s.project = p.id
+            GROUP BY p.id
+            ORDER BY p.name;
+            """,
             cancellationToken: ct));
         return Results.Ok(new { items = rows.ToList(), next_cursor = (string?)null });
     }
