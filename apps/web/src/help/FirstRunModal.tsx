@@ -94,31 +94,34 @@ export function FirstRunModal() {
           <li style={{ display: 'flex', gap: 'var(--s-3)' }}>
             <span style={{ color: 'var(--accent-human)', fontWeight: 600 }}>1</span>
             <span>
-              The big tile on the left is the seeded spec. The chips on the right are its tasks.
+              Click <strong>+ New spec</strong> in the top-right to start from scratch, or click an
+              existing spec tile to open the editor.
             </span>
           </li>
           <li style={{ display: 'flex', gap: 'var(--s-3)' }}>
             <span style={{ color: 'var(--accent-human)', fontWeight: 600 }}>2</span>
             <span>
-              Click a spec to open the editor. Click a task to see its details. Press{' '}
-              <kbd style={kbdStyle}>G</kbd> / <kbd style={kbdStyle}>S</kbd> to switch surfaces.
+              A new spec starts as a <strong>draft</strong> with readiness 10 (gated). Flesh out
+              non-goals, constraints, and acceptance criteria to reach the 70 threshold — then you
+              can spawn tasks.
             </span>
           </li>
           <li style={{ display: 'flex', gap: 'var(--s-3)' }}>
             <span style={{ color: 'var(--accent-human)', fontWeight: 600 }}>3</span>
             <span>
-              Hit <kbd style={kbdStyle}>?</kbd> anytime to reopen help. The "reset welcome" link in
-              the footer brings this modal back.
+              Press <kbd style={kbdStyle}>?</kbd> anytime for help. The footer has{' '}
+              <strong>reset workspace</strong> (wipe back to empty) and{' '}
+              <strong>reset welcome</strong> (see this modal again) links for dogfood convenience.
             </span>
           </li>
         </ul>
 
         <div style={{ display: 'flex', gap: 'var(--s-2)', justifyContent: 'flex-end' }}>
           <button data-testid="first-run-dismiss" onClick={dismiss} style={btnSecondary}>
-            I'll figure it out
+            Explore on my own
           </button>
           <button data-testid="first-run-show-around" onClick={showAround} style={btnPrimary}>
-            Show me around
+            Walk me through it
           </button>
         </div>
       </div>

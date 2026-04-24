@@ -31,8 +31,22 @@ Atlas ships in phases. You're looking at **Phase 2**:
 The "Agent run" and "Digest" tabs are visible but not wired up yet — they
 land in Phase 3 and 4.
 
+## Starting from scratch (vs. the demo)
+
+Atlas boots with the **Meridian Payments** demo workspace so every surface
+has something to show. To see what a truly empty Atlas looks like:
+
+1. Click **reset workspace** in the footer. That wipes specs, tasks, and
+   the event log — but keeps the workspace, users, projects, and agents.
+2. The Work Graph will show the empty state with a **+ Create your first
+   spec** button.
+3. Click it (or **+ New spec** in the top nav) and fill in title /
+   project / owner. You're off.
+
+To get the demo data back, run `make seed` from a terminal.
+
 ## Next
 
 1. **Reading the Work Graph** — decode what's actually on your screen right now.
 2. **The 11 primitives in 2 minutes** — the full vocabulary.
-3. **Your first spec** — walk through editing a draft.
+3. **Your first spec** — create one from zero.

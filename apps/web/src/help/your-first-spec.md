@@ -1,52 +1,59 @@
 # Your first spec
 
-Atlas ships seeded with one spec (`spec_s142`) so the surfaces have
-something to show. Walk through editing it to learn the loop.
+Start from a truly empty workspace:
 
-## Step 1 — Open the Spec Editor
+1. Click the footer's **reset workspace** link (dev-only). It wipes specs,
+   tasks, and the event log, but keeps the workspace, users, projects,
+   and agents. You'll see the Work Graph empty state.
+2. Click **+ Create your first spec** on the empty state, or **+ New spec**
+   in the top nav.
 
-From the Work Graph, click the `spec_s142` tile, or press `S`. You'll see
-the structured editor: intent, non-goals, constraints, acceptance, open
-questions, and a **readiness panel** on the right.
+The modal asks for four things:
 
-## Step 2 — Edit the intent
+- **Title** — a human-readable sentence. This is what shows on the spec
+  node in the Work Graph.
+- **Project** — a spec belongs to one project. Atlas seeds a project
+  called `Core` (`prj_core`). Pick it or create another via
+  `POST /v1/tools/project.create`.
+- **Owner** — the accountable human. Agents (Phase 3+) work on behalf of
+  owners, never in place of them.
+- **Intent** _(optional)_ — the outcome you expect. You can always add
+  it later in the editor.
 
-The intent box is a textarea. Type anything. Atlas debounces your
-keystrokes (500 ms) and posts a `spec.propose_edit` to the API. The server
-appends a `spec.intent_edited` event to the event log, re-runs the
-projection, recomputes readiness, and streams the fresh breakdown back to
-you via SSE.
+Submit. The server:
 
-Watch the readiness panel on the right — the per-component bars update
-live when the SSE event arrives.
+1. Appends a `spec.created` event to `event_log`.
+2. Projects a fresh row in the `spec` read model with status `draft`,
+   version `1`, and readiness recomputed.
+3. Redirects you to the Spec Editor for the new id.
 
-## Step 3 — Watch the score move
+## Starting readiness: 10
 
-The intent section is _not_ weighted in readiness, so editing it won't
-change the score. Try one of the weighted sections instead (Phase 2 only
-exposes the intent textarea for direct editing — other sections are
-read-only for now, but the gate behaviour is still observable since
-`spec_s142` is above 70).
+An empty draft scores **10 / 100**, because the _"no blocking open
+questions"_ component gives full 10 / 10 by default. Every other
+component starts at zero. The gate is still on (10 < 70).
 
-See **The readiness gate** for the exact formula.
+## Move the score up
 
-## Step 4 — Spawn a task
+The fastest way to cross 70:
 
-With readiness ≥ 70 and `gated = false`, the **+ Spawn task** button in
-the editor header is enabled. Click it, fill in title + optional
-description + risk, submit.
+- Add **3 acceptance criteria**, at least one with `test_type`
+  `property` or `integration`. That's **+ 40** → 50.
+- Add **2 non-goals**, each ≥ 5 words. That's **+ 20** → 70.
+- Add **1 constraint with a numeric budget** (e.g. "p95 < 120ms"). That's
+  **+ 20** → 90.
 
-The task appears immediately in the Work Graph as a new chip under this
-spec. See **Spawning tasks** for the details (state machine, risk, what
-`approved_by` means).
+Phase 2 surfaces intent editing only; the other sections are still API-
+driven. Editing them in-UI lands with Phase 3 when agents get the same
+affordances as humans.
 
-## Step 5 — Transition a task
+## Spawn tasks
 
-Back in the Work Graph, click any task chip to open the detail panel.
-Change its status with the dropdown — illegal transitions are rejected by
-the server. Marking it `done` auto-sets `completed_at`.
+Once gated is false, the **+ Spawn task** button in the editor header
+becomes active. See _Spawning tasks_ for the form + state machine.
 
----
+## Next
 
-That's the full Phase 2 loop. Phase 3 adds agents who can do steps 2 and 4
-on your behalf.
+- _The readiness gate_ — full formula.
+- _Acceptance criteria_ — status chips, test types, why it's weighted 40.
+- _Spawning tasks_ — risk, state machine, blocks/blocked-by.

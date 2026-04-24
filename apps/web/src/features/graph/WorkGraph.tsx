@@ -20,6 +20,7 @@ import { TimeScrubber } from './TimeScrubber.js';
 interface Props {
   onOpenSpec: (id: string) => void;
   onOpenTask?: (id: string) => void;
+  onCreateFirstSpec?: () => void;
 }
 
 const nodeTypes: NodeTypes = {
@@ -38,7 +39,7 @@ const LAYOUT = {
   taskGapY: 90,
 };
 
-export function WorkGraph({ onOpenSpec, onOpenTask }: Props) {
+export function WorkGraph({ onOpenSpec, onOpenTask, onCreateFirstSpec }: Props) {
   const [specs, setSpecs] = useState<Spec[] | null>(null);
   const [tasks, setTasks] = useState<Task[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -173,35 +174,51 @@ export function WorkGraph({ onOpenSpec, onOpenTask }: Props) {
           height: '100%',
           gap: 'var(--s-3)',
           color: 'var(--fg-1)',
-          maxWidth: 520,
+          maxWidth: 560,
           margin: '0 auto',
           textAlign: 'center',
         }}
       >
         <div style={{ fontSize: 'var(--fs-24)', color: 'var(--fg-0)', fontWeight: 600 }}>
-          Atlas is empty.
+          No specs yet.
         </div>
         <p style={{ color: 'var(--fg-2)', lineHeight: 'var(--lh-prose)', margin: 0 }}>
-          The work graph renders every spec in the workspace with its tasks branching off, plus the
-          dependency edges between them. There are no specs yet. Load the Meridian demo workspace
-          with <code style={inlineCode}>make seed</code> or create your first spec from the API.
+          The work graph renders every spec in the workspace with its tasks branching off. Start by
+          creating a spec — it'll open in draft mode and guide you through reaching the readiness
+          threshold before you spawn tasks.
         </p>
-        <button
-          onClick={() => openHelp('your-first-spec')}
-          style={{
-            marginTop: 'var(--s-3)',
-            padding: '6px 14px',
-            background: 'var(--accent-human)',
-            color: 'var(--bg-0)',
-            border: 'none',
-            borderRadius: 'var(--r-2)',
-            cursor: 'pointer',
-            fontSize: 'var(--fs-12)',
-            fontWeight: 600,
-          }}
-        >
-          Walk me through my first spec
-        </button>
+        <div style={{ display: 'flex', gap: 'var(--s-2)', marginTop: 'var(--s-3)' }}>
+          <button
+            data-testid="create-first-spec"
+            onClick={() => onCreateFirstSpec?.()}
+            style={{
+              padding: '6px 14px',
+              background: 'var(--accent-human)',
+              color: 'var(--bg-0)',
+              border: 'none',
+              borderRadius: 'var(--r-2)',
+              cursor: 'pointer',
+              fontSize: 'var(--fs-12)',
+              fontWeight: 600,
+            }}
+          >
+            + Create your first spec
+          </button>
+          <button
+            onClick={() => openHelp('your-first-spec')}
+            style={{
+              padding: '6px 14px',
+              background: 'var(--bg-2)',
+              color: 'var(--fg-1)',
+              border: '1px solid var(--line-2)',
+              borderRadius: 'var(--r-2)',
+              cursor: 'pointer',
+              fontSize: 'var(--fs-12)',
+            }}
+          >
+            Walk me through it first
+          </button>
+        </div>
       </div>
     );
   }

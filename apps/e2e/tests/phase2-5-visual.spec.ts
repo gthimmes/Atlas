@@ -28,8 +28,14 @@ test.describe('Phase 2.5 visual validation', () => {
     await page.goto('/');
     await page.evaluate(() => localStorage.setItem('atlas.firstRunSeen', 'true'));
     await page.reload();
-    await page.getByRole('navigation').getByRole('button', { name: /^Agent run/i }).click();
+    await page
+      .getByRole('navigation')
+      .getByRole('button', { name: /^Agent run/i })
+      .click();
     await expect(page.getByTestId('coming-soon-run')).toBeVisible();
-    await page.screenshot({ path: 'screenshots/phase2-5-agent-run-placeholder.png', fullPage: true });
+    await page.screenshot({
+      path: 'screenshots/phase2-5-agent-run-placeholder.png',
+      fullPage: true,
+    });
   });
 });

@@ -2,7 +2,15 @@
 // move to TanStack Query for caching in Phase 2 once we have more than
 // one surface consuming a given resource.
 
-import type { ReadinessBreakdown, Spec, Task } from '@atlas/schema';
+import type { ReadinessBreakdown, Spec, Task, User } from '@atlas/schema';
+
+export interface ProjectSummary {
+  id: string;
+  workspace: string;
+  slug: string;
+  name: string;
+  created_at: string;
+}
 
 export class ApiError extends Error {
   constructor(
@@ -105,6 +113,32 @@ export async function createTask(body: {
     method: 'POST',
     body: JSON.stringify(body),
   });
+}
+
+export async function listProjects(): Promise<{ items: ProjectSummary[] }> {
+  return request<{ items: ProjectSummary[] }>('/v1/projects');
+}
+
+export async function listUsers(): Promise<{ items: User[] }> {
+  return request<{ items: User[] }>('/v1/users');
+}
+
+export async function createSpec(body: {
+  title: string;
+  project: string;
+  owner: string;
+  slug?: string;
+  intent?: string;
+}): Promise<{ id: string; slug: string; event_id: number }> {
+  return request('/v1/tools/spec.create', { method: 'POST', body: JSON.stringify(body) });
+}
+
+export async function createProject(body: { slug: string; name: string }): Promise<{ id: string }> {
+  return request('/v1/tools/project.create', { method: 'POST', body: JSON.stringify(body) });
+}
+
+export async function resetWorkspace(): Promise<{ reset: boolean }> {
+  return request('/v1/tools/workspace.reset', { method: 'POST', body: '{}' });
 }
 
 export async function updateTask(body: {

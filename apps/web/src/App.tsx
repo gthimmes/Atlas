@@ -4,9 +4,11 @@ import { HealthBadge } from './components/HealthBadge.js';
 import { SpecEditor } from './features/specs/SpecEditor.js';
 import { WorkGraph } from './features/graph/WorkGraph.js';
 import { TaskDetailPanel } from './features/tasks/TaskDetailPanel.js';
+import { NewSpecDialog } from './features/specs/NewSpecDialog.js';
 import { HelpDrawer } from './help/HelpDrawer.js';
 import { FirstRunModal } from './help/FirstRunModal.js';
 import { useHelp } from './help/store.js';
+import { resetWorkspace } from './lib/api.js';
 
 type Theme = 'dark' | 'light';
 type View = 'graph' | 'spec' | 'run' | 'digest';
@@ -26,6 +28,10 @@ export function App() {
     () => localStorage.getItem('atlas.activeSpec') ?? DEFAULT_SPEC_ID,
   );
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
+  const [newSpecOpen, setNewSpecOpen] = useState(false);
+  // Bump this to force WorkGraph (and any other list consumer) to refetch
+  // after mutations we can't subscribe to (new spec, reset).
+  const [workspaceRev, setWorkspaceRev] = useState(0);
 
   useEffect(() => {
     localStorage.setItem('atlas.theme', theme);
@@ -56,6 +62,7 @@ export function App() {
         onChange={setView}
         theme={theme}
         onToggleTheme={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
+        onNewSpec={() => setNewSpecOpen(true)}
       />
       <main
         style={{
@@ -70,7 +77,12 @@ export function App() {
         {view === 'spec' ? (
           <SpecEditor specId={activeSpecId} />
         ) : view === 'graph' ? (
-          <WorkGraph onOpenSpec={openSpec} onOpenTask={setActiveTaskId} />
+          <WorkGraph
+            key={workspaceRev}
+            onOpenSpec={openSpec}
+            onOpenTask={setActiveTaskId}
+            onCreateFirstSpec={() => setNewSpecOpen(true)}
+          />
         ) : (
           <ComingSoon view={view} />
         )}
@@ -100,12 +112,58 @@ export function App() {
         <span>/</span>
         <span>phase 2</span>
         <span style={{ flex: 1 }} />
+        <ResetWorkspaceLink onReset={() => setWorkspaceRev((r) => r + 1)} />
         <FirstRunResetLink />
         <HealthBadge />
       </footer>
+      {newSpecOpen && (
+        <NewSpecDialog
+          onClose={() => setNewSpecOpen(false)}
+          onCreated={(id) => {
+            setNewSpecOpen(false);
+            setActiveSpecId(id);
+            setView('spec');
+            setWorkspaceRev((r) => r + 1);
+          }}
+        />
+      )}
       <FirstRunModal />
       <HelpDrawer />
     </div>
+  );
+}
+
+function ResetWorkspaceLink({ onReset }: { onReset: () => void }) {
+  const [busy, setBusy] = useState(false);
+  return (
+    <button
+      data-testid="reset-workspace"
+      disabled={busy}
+      onClick={async () => {
+        if (
+          !confirm('Wipe every spec, task, and event in the workspace? Projects and users survive.')
+        )
+          return;
+        setBusy(true);
+        try {
+          await resetWorkspace();
+          onReset();
+        } finally {
+          setBusy(false);
+        }
+      }}
+      title="Dev-only: truncate specs/tasks/event_log so you can see the empty-state flow"
+      style={{
+        background: 'transparent',
+        border: 'none',
+        color: 'var(--fg-3)',
+        cursor: 'pointer',
+        fontSize: 10,
+        fontFamily: 'var(--font-mono)',
+      }}
+    >
+      {busy ? 'resetting…' : 'reset workspace'}
+    </button>
   );
 }
 

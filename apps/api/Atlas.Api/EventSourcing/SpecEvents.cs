@@ -24,7 +24,8 @@ public sealed record SpecCreated(
     [property: JsonPropertyName("project")] string Project,
     [property: JsonPropertyName("title")] string Title,
     [property: JsonPropertyName("slug")] string Slug,
-    [property: JsonPropertyName("owner")] string Owner);
+    [property: JsonPropertyName("owner")] string Owner,
+    [property: JsonPropertyName("intent")] string? Intent);
 
 public sealed record SpecIntentEdited(
     [property: JsonPropertyName("intent")] string? Intent);

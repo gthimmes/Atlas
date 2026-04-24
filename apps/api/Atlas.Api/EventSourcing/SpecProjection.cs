@@ -12,6 +12,38 @@ namespace Atlas.Api.EventSourcing;
 /// </summary>
 public sealed class SpecProjection(JsonSerializerOptions jsonOptions, IReadinessCalculator readiness)
 {
+    public async Task CreateAsync(IDbConnection conn, IDbTransaction tx, string specId, SpecCreated p, string actor, CancellationToken ct)
+    {
+        var initialBreakdown = readiness.Compute(new ReadinessInputs(
+            NonGoals: [], Constraints: [], Acceptance: [], OpenQuestions: [], ContextBundleId: null));
+
+        await conn.ExecuteAsync(new CommandDefinition("""
+            INSERT INTO spec (
+              id, workspace, project, title, slug, status, version, head_sha,
+              intent, non_goals, constraints, acceptance, decisions, open_questions, context_bundle,
+              readiness_score, readiness_breakdown, task_ids, actor_summary,
+              repo_path, owner, created_by, created_at, updated_at
+            ) VALUES (
+              @id, @workspace, @project, @title, @slug, 'draft', 1, '0000000000000000000000000000000000000000',
+              @intent, '[]'::jsonb, '[]'::jsonb, '[]'::jsonb, '[]'::jsonb, '[]'::jsonb, NULL,
+              @score, @breakdown::jsonb, '[]'::jsonb, '{"humans":[],"agents":[]}'::jsonb,
+              NULL, @owner, @createdBy, now(), now()
+            );
+            """, new
+        {
+            id = specId,
+            workspace = p.Workspace,
+            project = p.Project,
+            title = p.Title,
+            slug = p.Slug,
+            intent = p.Intent,
+            owner = p.Owner,
+            createdBy = actor,
+            score = initialBreakdown.Score,
+            breakdown = JsonSerializer.Serialize(initialBreakdown, jsonOptions),
+        }, transaction: tx, cancellationToken: ct));
+    }
+
     public async Task ApplyAsync(
         IDbConnection conn,
         IDbTransaction tx,

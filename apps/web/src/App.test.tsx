@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { App } from './App.js';
 
 // The App now calls fetch via SpecEditor/WorkGraph depending on view.
@@ -21,6 +21,12 @@ const stubFetch = () => {
     }
     if (url.startsWith('/v1/tasks')) {
       return new Response(JSON.stringify({ items: [], next_cursor: null }), { status: 200 });
+    }
+    if (url.startsWith('/v1/projects')) {
+      return new Response(JSON.stringify({ items: [] }), { status: 200 });
+    }
+    if (url.startsWith('/v1/users')) {
+      return new Response(JSON.stringify({ items: [] }), { status: 200 });
     }
     return new Response('{}', { status: 200 });
   });
@@ -100,7 +106,13 @@ describe('<App />', () => {
     render(<App />);
     expect(screen.getByTestId('atlas-shell')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Work graph/i })).toBeInTheDocument();
+    // The list stub returns one spec, so the full graph renders.
     await waitFor(() => expect(screen.getByTestId('work-graph')).toBeInTheDocument());
+  });
+
+  it('exposes a + New spec button in the nav', () => {
+    render(<App />);
+    expect(screen.getByTestId('new-spec-button')).toBeInTheDocument();
   });
 
   it('toggles theme when the badge is clicked', async () => {
@@ -113,7 +125,8 @@ describe('<App />', () => {
 
   it('switches surface when a nav item is activated', async () => {
     render(<App />);
-    fireEvent.click(screen.getByRole('button', { name: /Spec\b/i }));
+    const nav = screen.getByRole('navigation');
+    fireEvent.click(within(nav).getByRole('button', { name: /^Spec\b/i }));
     expect(screen.getByTestId('surface-spec')).toBeInTheDocument();
     await waitFor(() => expect(screen.getByTestId('readiness-panel')).toBeInTheDocument());
   });

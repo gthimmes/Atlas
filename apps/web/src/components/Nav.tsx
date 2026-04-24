@@ -8,6 +8,7 @@ interface Props {
   onChange: (v: View) => void;
   theme: 'dark' | 'light';
   onToggleTheme: () => void;
+  onNewSpec: () => void;
 }
 
 const ITEMS: Array<{ id: View; label: string; kbd: string }> = [
@@ -17,7 +18,7 @@ const ITEMS: Array<{ id: View; label: string; kbd: string }> = [
   { id: 'digest', label: 'Digest', kbd: 'D' },
 ];
 
-export function Nav({ view, onChange, theme, onToggleTheme }: Props) {
+export function Nav({ view, onChange, theme, onToggleTheme, onNewSpec }: Props) {
   const toggleHelp = useHelp((s) => s.toggle);
 
   useEffect(() => {
@@ -107,6 +108,24 @@ export function Nav({ view, onChange, theme, onToggleTheme }: Props) {
       </div>
 
       <div style={{ flex: 1 }} />
+
+      <button
+        data-testid="new-spec-button"
+        onClick={onNewSpec}
+        title="Create a new spec (start from scratch)"
+        style={{
+          padding: '5px 10px',
+          background: 'var(--accent-human)',
+          color: 'var(--bg-0)',
+          border: 'none',
+          borderRadius: 'var(--r-2)',
+          fontSize: 'var(--fs-12)',
+          fontWeight: 600,
+          cursor: 'pointer',
+        }}
+      >
+        + New spec
+      </button>
 
       <button
         data-testid="help-button"
