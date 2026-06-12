@@ -53,10 +53,20 @@ public sealed class SpecProjection(JsonSerializerOptions jsonOptions, IReadiness
         string actor,
         CancellationToken ct)
     {
-        // Bump version + updated_at on every mutation.
+        // Bump version + updated_at on every mutation, and record the actor
+        // in actor_summary (humans/agents bucket by id prefix) so the UI can
+        // show who has touched the spec without replaying the event log.
+        var bucket = actor.StartsWith("agt_") ? "agents" : "humans";
         await conn.ExecuteAsync(new CommandDefinition("""
-            UPDATE spec SET version = version + 1, updated_at = now() WHERE id = @id;
-            """, new { id = specId }, transaction: tx, cancellationToken: ct));
+            UPDATE spec SET
+              version = version + 1,
+              updated_at = now(),
+              actor_summary = CASE
+                WHEN actor_summary->@bucket ? @actor::text THEN actor_summary
+                ELSE jsonb_set(actor_summary, ARRAY[@bucket], (actor_summary->@bucket) || to_jsonb(@actor::text))
+              END
+            WHERE id = @id;
+            """, new { id = specId, bucket, actor }, transaction: tx, cancellationToken: ct));
 
         switch (kind)
         {

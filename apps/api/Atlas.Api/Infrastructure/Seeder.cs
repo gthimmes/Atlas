@@ -27,7 +27,7 @@ public static class Seeder
         // Wipe read-model tables in FK-safe order (event_log cleared too for seed clean-slate).
         foreach (var table in new[]
                  {
-                     "task", "spec", "agent_identity", "atlas_user",
+                     "agent_token", "task", "spec", "agent_identity", "atlas_user",
                      "project", "workspace", "event_log"
                  })
         {
@@ -49,6 +49,7 @@ public static class Seeder
         foreach (var a in workspace.RootElement.GetProperty("agents").EnumerateArray())
         {
             await InsertAgent(conn, tx, a);
+            await InsertDevToken(conn, tx, a.GetProperty("id").GetString()!);
         }
 
         foreach (var s in specsAndTasks.RootElement.GetProperty("specs").EnumerateArray())
@@ -63,7 +64,27 @@ public static class Seeder
 
         tx.Commit();
         Console.WriteLine("Seed complete.");
+        Console.WriteLine("Dev agent tokens (local only, derived as atk_dev_<agent_id>):");
+        foreach (var a in workspace.RootElement.GetProperty("agents").EnumerateArray())
+        {
+            var id = a.GetProperty("id").GetString();
+            Console.WriteLine($"  {id}: atk_dev_{id}");
+        }
     }
+
+    // DEV ONLY: deterministic tokens so local agents and e2e playback can
+    // authenticate against /mcp without an issuance flow. The OAuth slice
+    // replaces these with PKCE-minted tokens; the seeder then drops this.
+    private static Task InsertDevToken(System.Data.IDbConnection conn, System.Data.IDbTransaction tx, string agentId) =>
+        conn.ExecuteAsync(new CommandDefinition("""
+            INSERT INTO agent_token (id, agent, token_hash, label)
+            VALUES (@id, @agent, @hash, 'dev seed token');
+            """, new
+        {
+            id = $"tok_dev_{agentId}",
+            agent = agentId,
+            hash = Auth.AgentTokens.Hash($"atk_dev_{agentId}"),
+        }, transaction: tx));
 
     private static string LocateFixtures()
     {

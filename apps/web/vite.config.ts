@@ -5,7 +5,9 @@ import { defineConfig } from 'vite';
 export default defineConfig({
   plugins: [react()],
   server: {
-    port: 5173,
+    // ATLAS_WEB_PORT lets e2e (and anyone whose 5173 is taken) pick a port;
+    // strictPort so a clash fails loudly instead of silently shifting.
+    port: Number(process.env.ATLAS_WEB_PORT ?? 5173),
     strictPort: true,
     proxy: {
       '/v1': {

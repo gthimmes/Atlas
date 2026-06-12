@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Atlas.Api.Domain;
 using Atlas.Api.EventSourcing;
 using Atlas.Api.Readiness;
 using Atlas.Api.Sse;
@@ -25,6 +26,12 @@ public static class DomainRegistration
 
         // SSE fan-out hub (readiness updates + later: activity streams).
         services.AddSingleton<ISpecReadinessHub, SpecReadinessHub>();
+
+        // Tool services shared by the HTTP /v1/tools endpoints and the MCP
+        // server. Scoped because they consume scoped FluentValidation
+        // validators.
+        services.AddScoped<SpecEditService>();
+        services.AddScoped<TaskToolService>();
 
         return services;
     }

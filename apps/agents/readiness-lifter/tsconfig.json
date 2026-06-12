@@ -1,0 +1,16 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "noEmit": true,
+    "lib": ["ES2022"],
+    "types": ["node"],
+    // @modelcontextprotocol/sdk's Transport interface declares optional
+    // properties without `| undefined`, which is incompatible with
+    // exactOptionalPropertyTypes. Relaxed for this package only.
+    "exactOptionalPropertyTypes": false
+  },
+  "include": ["src/**/*"]
+}

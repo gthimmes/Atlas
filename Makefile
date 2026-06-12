@@ -1,4 +1,4 @@
-.PHONY: help install codegen dev dev-api dev-web db-up db-down seed test test-unit test-int test-e2e lint typecheck format clean
+.PHONY: help install codegen dev dev-api dev-web db-up db-down seed demo-agent test test-unit test-int test-e2e lint typecheck format clean
 
 # Detect pnpm on PATH; fall back to the Windows LOCALAPPDATA install.
 PNPM ?= $(shell command -v pnpm 2>/dev/null || echo "$(LOCALAPPDATA)/pnpm/pnpm")
@@ -8,7 +8,7 @@ help: ## Show this help
 
 install: ## Install all JS and .NET deps
 	$(PNPM) install
-	dotnet restore Atlas.sln
+	dotnet restore Atlas.slnx
 
 codegen: ## Regenerate C# records from schema.ts
 	$(PNPM) run codegen
@@ -34,12 +34,15 @@ dev: db-up ## Start db + api + web (run in separate terminals in practice)
 	@echo "  2. make dev-web"
 	@echo "  3. (optional) docker compose logs -f db"
 
+demo-agent: ## Create a draft spec + watch the MCP agent lift it (Claude if ANTHROPIC_API_KEY is set, mock otherwise)
+	$(PNPM) --filter @atlas/readiness-lifter run demo
+
 test-unit: ## Run unit tests (TS + .NET)
 	$(PNPM) test
-	dotnet test Atlas.sln --filter Category=Unit --nologo
+	dotnet test Atlas.slnx --filter Category=Unit --nologo
 
 test-int: db-up ## Run integration tests (Testcontainers + .NET)
-	dotnet test Atlas.sln --filter Category=Integration --nologo
+	dotnet test Atlas.slnx --filter Category=Integration --nologo
 
 test-e2e: ## Run Playwright playback tests
 	$(PNPM) run e2e
@@ -48,17 +51,17 @@ test: test-unit test-int test-e2e ## Run all three tiers
 
 typecheck: ## TypeScript + .NET type-check
 	$(PNPM) run typecheck
-	dotnet build Atlas.sln --nologo -v minimal
+	dotnet build Atlas.slnx --nologo -v minimal
 
 lint: ## Lint (TS + Prettier + dotnet format)
 	$(PNPM) run lint
 	$(PNPM) run format:check
-	dotnet format Atlas.sln --verify-no-changes --no-restore
+	dotnet format Atlas.slnx --verify-no-changes --no-restore
 
 format: ## Auto-format everything
 	$(PNPM) run format
-	dotnet format Atlas.sln --no-restore
+	dotnet format Atlas.slnx --no-restore
 
 clean: ## Remove build artifacts
 	$(PNPM) -r exec rm -rf dist .vite
-	dotnet clean Atlas.sln --nologo
+	dotnet clean Atlas.slnx --nologo

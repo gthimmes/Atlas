@@ -1,0 +1,25 @@
+{
+  "name": "@atlas/readiness-lifter",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Demo agent: connects to the Atlas MCP endpoint and lifts a gated spec past the readiness threshold (build-order M2 exit criterion).",
+  "scripts": {
+    "start": "tsx src/cli.ts",
+    "demo": "tsx src/demo.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "echo \"(eslint wired in task #9)\" && exit 0",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "22.9.0",
+    "tsx": "4.19.2",
+    "typescript": "5.6.3",
+    "vitest": "2.1.4"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "0.104.1",
+    "@modelcontextprotocol/sdk": "1.29.0",
+    "zod": "3.25.76"
+  }
+}

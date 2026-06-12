@@ -46,6 +46,10 @@ export default defineConfig({
       port: PORT,
       reuseExistingServer: !process.env.CI,
       timeout: 60_000,
+      env: {
+        // Forward the chosen port to vite (vite.config.ts reads it).
+        ATLAS_WEB_PORT: String(PORT),
+      },
     },
   ],
 });

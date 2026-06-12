@@ -37,6 +37,23 @@ export function SpecEditor({ specId }: Props) {
     };
   }, [specId]);
 
+  // Every readiness event means the spec mutated — possibly by an agent
+  // over MCP — so refetch the body and let the sections track what's being
+  // written. The intent textarea keeps its own draft state, so a refetch
+  // never clobbers in-flight typing.
+  useEffect(() => {
+    if (!liveReadiness) return;
+    let cancelled = false;
+    getSpec(specId)
+      .then((s) => !cancelled && setSpec(s))
+      .catch(() => {
+        /* transient refetch failure: keep showing the last good spec */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [liveReadiness, specId]);
+
   const pushIntent = useDebouncedCallback((value: string) => {
     proposeSpecEdit(specId, 'intent', { intent: value })
       .then((fresh) => setSpec(fresh))

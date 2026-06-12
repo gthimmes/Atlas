@@ -14,8 +14,14 @@ repo.
 - **Phase 2** (tasks + interactive graph) — task CRUD via tools, legal
   state-machine transitions, readiness-gated spawn, react-flow Work Graph
   with `blocks` edges + 7-day time scrubber, Task detail panel.
-- **Phase 3+** — MCP endpoint, OAuth, `@atlas/agent-sdk`, agent sessions,
-  verification evidence, morning digest. Not built yet.
+- **Phase 3.1** (MCP endpoint + first real agent) — `workspace://` MCP
+  server at `/mcp` (resources + `spec.propose_edit` / `task.create` /
+  `task.update` tools) behind agent bearer tokens; the `readiness-lifter`
+  demo agent connects over MCP and lifts a gated spec past threshold while
+  the Spec Editor updates live (`make demo-agent`). This is build-order
+  M2's exit criterion.
+- **Phase 3.2+** — OAuth 2.1 + PKCE (OpenIddict), `@atlas/agent-sdk`,
+  agent sessions, verification evidence, morning digest. Not built yet.
 
 ## Quick start
 
@@ -46,8 +52,10 @@ Then open http://localhost:5173.
 │   └── schema-codegen/    ts-morph → apps/api/Atlas.Api/Generated/Schema.g.cs
 ├── apps/
 │   ├── api/               ASP.NET Core 10 minimal API, Dapper + Postgres
-│   │   ├── Atlas.Api/       domain, endpoints, event log, projections
+│   │   ├── Atlas.Api/       domain, endpoints, MCP server, event log, projections
 │   │   └── Atlas.Api.Tests/ xUnit + FluentAssertions + Testcontainers
+│   ├── agents/
+│   │   └── readiness-lifter/  demo MCP agent (mock + Claude drafting)
 │   ├── web/               Vite + React 18 + TS + @xyflow/react
 │   └── e2e/               Playwright (Chromium + WebKit)
 ├── Atlas.slnx             dotnet solution (slnx format)
@@ -77,8 +85,9 @@ design handoff brief (illustrative) lives in `docs/design/`:
 ## Stack
 
 - **Backend:** C# / .NET 10, ASP.NET Core minimal APIs, Dapper + Npgsql,
-  FluentMigrator, Serilog, native SSE. OpenIddict + ModelContextProtocol.NET
-  land in Phase 3.
+  FluentMigrator, Serilog, native SSE. MCP server via the official
+  ModelContextProtocol .NET SDK (stateless streamable HTTP). OpenIddict
+  OAuth lands in a later Phase 3 slice.
 - **Frontend:** Vite + React 18 + TypeScript strict, `@xyflow/react` for
   the Work Graph, Zustand for local state (adopted as needed), plain CSS
   variables for theming.
@@ -101,3 +110,28 @@ design handoff brief (illustrative) lives in `docs/design/`:
 - `POST /v1/tools/spec.propose_edit` — section-scoped patches
 - `POST /v1/tools/task.create` — rejects with `E_POLICY_DENIED` on gated spec
 - `POST /v1/tools/task.update` — enforces state-machine transitions
+
+## MCP endpoint (Phase 3.1)
+
+`/mcp` hosts the `workspace://` MCP server (streamable HTTP, stateless).
+Agents authenticate with bearer tokens (`Authorization: Bearer atk_*`);
+the seeder issues deterministic dev tokens per fixture agent
+(`atk_dev_<agent_id>`, e.g. `atk_dev_agt_be`) — local only, replaced by
+OAuth 2.1 + PKCE in a later slice. The `/v1` HTTP surface stays open for
+the web UI until then.
+
+- **Resources:** `workspace://specs`, `workspace://specs/{id}`,
+  `workspace://specs/{id}/readiness`, `workspace://tasks`,
+  `workspace://tasks/{id}`
+- **Tools:** `spec.propose_edit`, `task.create`, `task.update` — same
+  domain services as the HTTP tools; tool failures return
+  `isError: true` with an `E_*`-prefixed message (`E_POLICY_DENIED`,
+  `E_NOT_FOUND`, `E_SCHEMA_MISMATCH`)
+- Mutations through MCP are attributed to the token's agent identity in
+  the event log and the spec's `actor_summary`.
+
+**Demo:** `make demo-agent` creates a draft spec and the
+`readiness-lifter` agent lifts it past threshold 70 over MCP while you
+watch the score climb in the Spec Editor (SSE). With `ANTHROPIC_API_KEY`
+set the sections are drafted by Claude; without it a deterministic mock
+drafter is used (same code path the Playwright playback suite drives).
