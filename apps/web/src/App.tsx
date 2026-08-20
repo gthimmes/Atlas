@@ -8,6 +8,7 @@ import { NewSpecDialog } from './features/specs/NewSpecDialog.js';
 import { ProjectsDialog } from './features/projects/ProjectsDialog.js';
 import { useProjects } from './features/projects/store.js';
 import { HelpDrawer } from './help/HelpDrawer.js';
+import { HelpWidget } from './components/HelpWidget.js';
 import { FirstRunModal } from './help/FirstRunModal.js';
 import { useHelp } from './help/store.js';
 import { resetWorkspace } from './lib/api.js';
@@ -137,6 +138,7 @@ export function App() {
       {projectsOpen && <ProjectsDialog onClose={() => setProjectsOpen(false)} />}
       <FirstRunModal />
       <HelpDrawer />
+      <HelpWidget view={view} theme={theme} />
     </div>
   );
 }

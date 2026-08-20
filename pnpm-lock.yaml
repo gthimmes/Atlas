@@ -63,6 +63,9 @@ importers:
       '@xyflow/react':
         specifier: 12.3.5
         version: 12.3.5(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      help-navigator:
+        specifier: github:gthimmes/help-navigator
+        version: https://codeload.github.com/gthimmes/help-navigator/tar.gz/6d6ad34534bd38deabe7035993b877b73c7c1184
       markdown-it:
         specifier: 14.1.0
         version: 14.1.0
@@ -1270,6 +1273,10 @@ packages:
   hasown@2.0.3:
     resolution: {integrity: sha512-ej4AhfhfL2Q2zpMmLo7U1Uv9+PyhIZpgQLGT1F9miIGmiCJIoCgSmczFdrc97mWT4kVY72KA+WnnhJ5pghSvSg==}
     engines: {node: '>= 0.4'}
+
+  help-navigator@https://codeload.github.com/gthimmes/help-navigator/tar.gz/6d6ad34534bd38deabe7035993b877b73c7c1184:
+    resolution: {tarball: https://codeload.github.com/gthimmes/help-navigator/tar.gz/6d6ad34534bd38deabe7035993b877b73c7c1184}
+    version: 0.1.0
 
   hono@4.12.25:
     resolution: {integrity: sha512-2NFaIyNVgJmBs/ecmtGzlmluTFs5cHEWGTdu0t1HBwYzoGXOL5nUQBRMXsXWla5i4KkG//QMzVP88m1+I3fdAQ==}
@@ -2943,6 +2950,8 @@ snapshots:
   hasown@2.0.3:
     dependencies:
       function-bind: 1.1.2
+
+  help-navigator@https://codeload.github.com/gthimmes/help-navigator/tar.gz/6d6ad34534bd38deabe7035993b877b73c7c1184: {}
 
   hono@4.12.25: {}
 
